@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ScratchMUD.Server.Hubs;
@@ -25,6 +26,8 @@ namespace ScratchMUD.Server
             {
                 options.EnableDetailedErrors = true;
             });
+            services.AddHostedService<ServerTimeHostedService>();
+            services.AddSingleton<EventHub>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -55,6 +58,7 @@ namespace ScratchMUD.Server
             {
                 routes.MapHub<EventHub>("/EventHub");
             });
+
             app.UseMvc();
         }
     }
