@@ -5,6 +5,11 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">Welcome to ScratchMUD</h1>
+    <textarea id="messagesTextArea" rows="20" cols="100" readonly></textarea>
 </div>
+<button id="connectEventHub">Connect to SignalR</button>
+<button id="sendRandomMessages">Send Random Messages</button>
+
+<script src="~/lib/signalr/dist/browser/signalr.js"></script>
+<script src="~/js/serverEvents.js"></script>
