@@ -1,9 +1,7 @@
-using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -38,8 +36,6 @@ namespace ScratchMUD.Client
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-
-                WireUpHubForTesting();
             }
             else
             {
@@ -53,22 +49,6 @@ namespace ScratchMUD.Client
             app.UseCookiePolicy();
 
             app.UseMvc();
-        }
-
-        private void WireUpHubForTesting()
-        {
-            HubConnection connection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:5000/EventHub")
-                .Build();
-
-            connection.StartAsync();
-
-            connection.On<string>("ReceiveMessage", (message) =>
-            {
-                throw new NotImplementedException();
-            });
-
-            connection.SendAsync("StartRandomMessages", 10);
         }
     }
 }

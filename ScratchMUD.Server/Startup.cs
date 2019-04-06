@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ScratchMUD.Server.Hubs;
 
-namespace ScratchMUD
+namespace ScratchMUD.Server
 {
     public class Startup
     {
@@ -20,7 +20,11 @@ namespace ScratchMUD
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-            services.AddSignalR();
+            services.AddCors();
+            services.AddSignalR(options =>
+            {
+                options.EnableDetailedErrors = true;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -36,7 +40,17 @@ namespace ScratchMUD
                 app.UseHsts();
             }
 
+            //app.UseCors("allowAll");
+            app.UseCors(builder =>
+            {
+                builder.WithOrigins("https://localhost:5003")
+                    .AllowAnyHeader()
+                    .WithMethods("GET", "POST")
+                    .AllowCredentials();
+            });
+
             app.UseHttpsRedirection();
+
             app.UseSignalR(routes =>
             {
                 routes.MapHub<EventHub>("/EventHub");
