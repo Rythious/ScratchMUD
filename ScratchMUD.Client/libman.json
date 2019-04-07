@@ -4,11 +4,16 @@
   "libraries": [
     {
       "library": "@aspnet/signalr@1.1.0",
-      "destination": "wwwroot/lib/@aspnet/signalr/",
+      "destination": "wwwroot/lib/signalr/",
       "files": [
         "dist/browser/signalr.js",
         "dist/browser/signalr.min.js"
       ]
+    },
+    {
+      "provider": "unpkg",
+      "library": "bootstrap@4.1.3",
+      "destination": "wwwroot/lib/bootstrap/"
     }
   ]
 }
