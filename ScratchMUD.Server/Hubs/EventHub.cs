@@ -13,6 +13,11 @@ namespace ScratchMUD.Server.Hubs
             await Clients.All.SendAsync("ReceiveMessage", message);
         }
 
+        public async Task RelayClientMessage(string message)
+        {
+            await Clients.All.SendAsync("ReceiveMessage", $"{Context.ConnectionId} says \"{message}\"");
+        }
+
         public override Task OnConnectedAsync()
         {
             Task.Run(() => SendMessage($"A new client has connected on {Context.ConnectionId}."));
@@ -21,7 +26,7 @@ namespace ScratchMUD.Server.Hubs
         }
 
         //Throwaway method that is here to test connection between client and server.
-        public async Task StartRandomMessages(int countOfMessages)
+        public async Task StartTestMessages(int countOfMessages)
         {
             for (int i = 1; i <= countOfMessages; i++)
             {

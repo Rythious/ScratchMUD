@@ -1,6 +1,7 @@
 ﻿"use strict";
 
-document.getElementById("sendRandomMessages").disabled = true;
+document.getElementById("sendTestMessages").disabled = true;
+document.getElementById("sendUserCommand").disabled = true;
 
 document.getElementById("connectEventHub").addEventListener("click", function (event) {
     var connection = new signalR.HubConnectionBuilder().withUrl("https://localhost:5021/EventHub").build();
@@ -15,10 +16,15 @@ document.getElementById("connectEventHub").addEventListener("click", function (e
 
     document.getElementById("connectEventHub").disabled = true;
 
-    var sendMessagesButton = document.getElementById("sendRandomMessages");
+    enableTestMessagesButton(connection);
+    enableSendUserCommandButton(connection);
+});
+
+this.enableTestMessagesButton = function (connection) {
+    var sendMessagesButton = document.getElementById("sendTestMessages");
 
     sendMessagesButton.addEventListener("click", function (event) {
-        connection.invoke("StartRandomMessages", 10).catch(function (err) {
+        connection.invoke("StartTestMessages", 10).catch(function (err) {
             return console.error(err.toString());
         });
 
@@ -26,4 +32,20 @@ document.getElementById("connectEventHub").addEventListener("click", function (e
     });
 
     sendMessagesButton.disabled = false;
-});
+}
+
+this.enableSendUserCommandButton = function (connection) {
+    var sendUserCommandButton = document.getElementById("sendUserCommand");
+
+    sendUserCommandButton.addEventListener("click", function (event) {
+        var userCommand = document.getElementById("userCommand").value;
+
+        connection.invoke("RelayClientMessage", userCommand).catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        event.preventDefault();
+    });
+
+    sendUserCommandButton.disabled = false;
+}
