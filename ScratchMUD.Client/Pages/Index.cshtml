@@ -4,12 +4,14 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="text-center">
+<div class="text-center col-12" style="margin-bottom:5px">
     <h1 class="display-4">Welcome to ScratchMUD</h1>
-    <textarea id="messagesTextArea" rows="20" cols="100" readonly></textarea>
+    <textarea id="messagesTextArea" class="form-control" rows="20" readonly></textarea>
 </div>
-<button id="connectEventHub">Connect to SignalR</button>
-<button id="sendRandomMessages">Send Random Messages</button>
+<div class="col-12 text-center">
+    <button id="connectEventHub" class="btn col-4">Connect to SignalR</button>
+    <button id="sendRandomMessages" class="btn col-4">Send Random Messages</button>
+</div>
 
 <script src="~/lib/signalr/dist/browser/signalr.js"></script>
 <script src="~/js/serverEvents.js"></script>
