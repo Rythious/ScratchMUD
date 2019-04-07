@@ -13,6 +13,13 @@ namespace ScratchMUD.Server.Hubs
             await Clients.All.SendAsync("ReceiveMessage", message);
         }
 
+        public override Task OnConnectedAsync()
+        {
+            Task.Run(() => SendMessage($"A new client has connected on {Context.ConnectionId}."));
+
+            return base.OnConnectedAsync();
+        }
+
         //Throwaway method that is here to test connection between client and server.
         public async Task StartRandomMessages(int countOfMessages)
         {
