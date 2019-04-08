@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Configuration;
+using ScratchMUD.Server.DataObjects;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,6 +9,13 @@ namespace ScratchMUD.Server.Hubs
 {
     public class EventHub : Hub
     {
+        private readonly IConfiguration _configuration;
+
+        public EventHub(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         //TODO: This will be replaced with a method that sends some sort of event object.
         public async Task SendMessage(string message)
         {
@@ -21,6 +30,11 @@ namespace ScratchMUD.Server.Hubs
         public override Task OnConnectedAsync()
         {
             Task.Run(() => SendMessage($"A new client has connected on {Context.ConnectionId}."));
+
+            var room = new Room();
+            _configuration.Bind("Room", room);
+
+            Clients.Client(Context.ConnectionId).SendAsync("ReceiveMessage", $"{room.Title}\n{room.Description}");
 
             return base.OnConnectedAsync();
         }
