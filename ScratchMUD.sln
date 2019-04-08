@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28729.10
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScratchMUD.Server", "ScratchMUD.Server\ScratchMUD.Server.csproj", "{F3243D56-68FA-4C76-BB8C-6895AB7D20E9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScratchMUD.Server", "ScratchMUD.Server\ScratchMUD.Server.csproj", "{F3243D56-68FA-4C76-BB8C-6895AB7D20E9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScratchMUD.Client", "ScratchMUD.Client\ScratchMUD.Client.csproj", "{C1F6B8FE-900C-4D5A-B316-10084C32FA83}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScratchMUD.Client", "ScratchMUD.Client\ScratchMUD.Client.csproj", "{C1F6B8FE-900C-4D5A-B316-10084C32FA83}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScratchMUD.Server.Models", "ScratchMUD.Server.Models\ScratchMUD.Server.Models.csproj", "{AD8A6091-BF9B-4DE4-9D30-91C61185A513}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{C1F6B8FE-900C-4D5A-B316-10084C32FA83}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C1F6B8FE-900C-4D5A-B316-10084C32FA83}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C1F6B8FE-900C-4D5A-B316-10084C32FA83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD8A6091-BF9B-4DE4-9D30-91C61185A513}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD8A6091-BF9B-4DE4-9D30-91C61185A513}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD8A6091-BF9B-4DE4-9D30-91C61185A513}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD8A6091-BF9B-4DE4-9D30-91C61185A513}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
