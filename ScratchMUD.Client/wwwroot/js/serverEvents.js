@@ -7,9 +7,13 @@ document.getElementById("connectEventHub").addEventListener("click", function (e
     var connection = new signalR.HubConnectionBuilder().withUrl("https://localhost:5021/EventHub").build();
 
     connection.on("ReceiveMessage", function (message) {
-        var msg = message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "\n";
-        var textArea = document.getElementById("messagesTextArea");
-        textArea.value += msg;
+        var encodedMessage = message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "\n";
+        var textNode = document.createTextNode(encodedMessage);
+        var outputItem = document.createElement("li");
+        outputItem.appendChild(textNode);
+        outputItem.classList.add("mudOutputItem");
+        var textArea = document.getElementById("mudOutputWindow");
+        textArea.appendChild(outputItem);
     });
 
     connection.start().catch(err => console.error(err.toString()));

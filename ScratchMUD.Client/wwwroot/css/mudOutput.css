@@ -1,0 +1,25 @@
+﻿ul.mudOutputList {
+    display: flex;
+    overflow-y: auto;
+
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    align-content: flex-end;
+    justify-content: center;
+    margin-bottom: 5px;
+    background-color: dimgray;
+    font-family: Consolas;
+    color: lightgray;
+    -webkit-flex-flow: row wrap;
+    height: 400px;
+    min-height: 0px;
+}
+
+li.mudOutputItem {
+    list-style-type:none;
+    margin: 5px;
+    padding: 2px;
+    color: white;
+    width: 100%;
+}
