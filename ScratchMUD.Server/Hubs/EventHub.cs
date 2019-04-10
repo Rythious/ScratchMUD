@@ -19,12 +19,12 @@ namespace ScratchMUD.Server.Hubs
         //TODO: This will be replaced with a method that sends some sort of event object.
         public async Task SendMessage(string message)
         {
-            await Clients.All.SendAsync("ReceiveMessage", message);
+            await Clients.All.SendAsync("ReceiveServerCreatedMessage", message);
         }
 
         public async Task RelayClientMessage(string message)
         {
-            await Clients.All.SendAsync("ReceiveMessage", $"{Context.ConnectionId} says \"{message}\"");
+            await Clients.All.SendAsync("ReceiveClientCreatedMessage", $"{Context.ConnectionId} says \"{message}\"");
         }
 
         public override Task OnConnectedAsync()
@@ -34,7 +34,7 @@ namespace ScratchMUD.Server.Hubs
             var room = new Room();
             _configuration.Bind("Room", room);
 
-            Clients.Client(Context.ConnectionId).SendAsync("ReceiveMessage", $"{room.Title}\n{room.Description}");
+            Clients.Client(Context.ConnectionId).SendAsync("ReceiveRoomMessage", $"{room.Description}");
 
             return base.OnConnectedAsync();
         }

@@ -9,18 +9,22 @@ document.getElementById("userCommand").disabled = true;
 document.getElementById("connectEventHub").addEventListener("click", function (event) {
     var connection = new signalR.HubConnectionBuilder().withUrl("https://localhost:5021/EventHub").build();
 
-    connection.on("ReceiveMessage", function (message) {
+    connection.on("ReceiveClientCreatedMessage", function (message) {
         var newItem = buildMudOutputItemWithMessage(message);
+        newItem.classList.add("client-message");
+        addMudOutputItemToWindowAndPreserveScrolling(newItem);
+    });
 
-        var outputWindow = document.getElementById("mudOutputWindow");
-        var isUserScrolledToBottom = outputWindow.scrollHeight - outputWindow.clientHeight <= outputWindow.scrollTop + 1;
+    connection.on("ReceiveServerCreatedMessage", function (message) {
+        var newItem = buildMudOutputItemWithMessage(message);
+        newItem.classList.add("server-message");
+        addMudOutputItemToWindowAndPreserveScrolling(newItem);
+    });
 
-        var mudOutputList = document.getElementById("mudOutputList");
-        mudOutputList.appendChild(newItem);
-
-        if (isUserScrolledToBottom) {
-            outputWindow.scrollTop = outputWindow.scrollHeight - outputWindow.clientHeight
-        }
+    connection.on("ReceiveRoomMessage", function (message) {
+        var newItem = buildMudOutputItemWithMessage(message);
+        newItem.classList.add("room-message");
+        addMudOutputItemToWindowAndPreserveScrolling(newItem);
     });
 
     connection.start().catch(err => console.error(err.toString()));
@@ -34,12 +38,24 @@ document.getElementById("connectEventHub").addEventListener("click", function (e
 });
 
 this.buildMudOutputItemWithMessage = function (message) {
-    var encodedMessage = message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "\n";
+    var encodedMessage = message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     var outputItem = document.createElement("li");
     var newTextNode = document.createTextNode(encodedMessage);
     outputItem.appendChild(newTextNode);
-    outputItem.classList.add("mudOutputItem");
+    outputItem.classList.add("mud-output-item");
     return outputItem;
+}
+
+this.addMudOutputItemToWindowAndPreserveScrolling = function (item) {
+    var outputWindow = document.getElementById("mudOutputWindow");
+    var isUserScrolledToBottom = outputWindow.scrollHeight - outputWindow.clientHeight <= outputWindow.scrollTop + 1;
+
+    var mudOutputList = document.getElementById("mudOutputList");
+    mudOutputList.appendChild(item);
+
+    if (isUserScrolledToBottom) {
+        outputWindow.scrollTop = outputWindow.scrollHeight - outputWindow.clientHeight
+    }
 }
 
 this.enableTestMessagesButton = function (connection) {

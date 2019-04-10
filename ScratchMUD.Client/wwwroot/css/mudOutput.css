@@ -1,10 +1,21 @@
-﻿li.mudOutputItem {
+﻿li.mud-output-item {
     display: flex;
     list-style-type:none;
     margin: 5px;
     padding: 2px;
-    color: black;
     width: 100%;
+}
+
+.server-message {
+    color: goldenrod;
+}
+
+.client-message {
+    color: ghostwhite;
+}
+
+.room-message {
+    color: greenyellow;
 }
 
 * {
@@ -31,7 +42,7 @@
     background-color: dimgray;
     overflow-y: auto;
     flex-wrap: wrap;
-    align-content: flex-end;
+    align-content: flex-start;
     font-family: Consolas;
     color: lightgray;
     height: 0px;
