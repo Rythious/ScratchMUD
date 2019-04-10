@@ -1,0 +1,59 @@
+﻿li.mud-output-item {
+    display: flex;
+    list-style-type:none;
+    margin: 5px;
+    padding: 2px;
+    width: 100%;
+}
+
+.server-message {
+    color: goldenrod;
+}
+
+.client-message {
+    color: ghostwhite;
+}
+
+.room-message {
+    color: greenyellow;
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.wrapper > * {
+    padding: 20px;
+}
+
+.page-main {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex-grow: 1;
+    background-color: dimgray;
+    overflow-y: auto;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    font-family: Consolas;
+    color: lightgray;
+    height: 0px;
+    min-height: 0px;
+}
+
+.page-footer {
+    display: flex;
+    flex-direction: column;
+}
+
+.page-footer div {
+    display: flex;
+}

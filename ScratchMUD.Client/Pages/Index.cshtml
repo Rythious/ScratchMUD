@@ -2,21 +2,30 @@
 @model IndexModel
 @{
     ViewData["Title"] = "Home page";
+    Layout = null;
 }
 
-<div class="container">
-    <h1 class="display-4 text-center">Welcome to ScratchMUD</h1>
-    <div class="row col-12" style="margin-bottom:5px">
-        <textarea id="messagesTextArea" class="form-control" rows="20" readonly></textarea>
-    </div>
-    <div class="row col-12" style="margin-bottom:5px">
-        <input type="text" id="userCommand" class="col-12"/>
-    </div>
-    <div class="row col-12">
-        <button id="connectEventHub" class="btn btn-primary col-lg-4 col-md-12">Connect to SignalR</button>
-        <button id="sendUserCommand" class="btn col-lg-4 col-md-12">Send</button>
-        <button id="sendTestMessages" class="btn col-lg-4 col-md-12">Send Test Messages</button>
-    </div>
+<link rel="stylesheet" href="~/css/mudOutput.css" />
+<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+
+<div class="wrapper">
+    <header class="page-header">
+        <h1 class="display-4 text-center">Welcome to ScratchMUD</h1>
+    </header>
+    <main id ="mudOutputWindow" class="page-main">
+        <ul id="mudOutputList">
+        </ul>
+    </main>
+    <footer class="page-footer">
+        <div class="row">
+            <input type="text" class="col-10"id="userCommand"/>
+            <button id="sendUserCommand" class="btn col-2">Send</button>
+        </div>
+        <div class="row">
+            <button id="connectEventHub" class="btn btn-primary col-6">Connect to SignalR</button>
+            <button id="sendTestMessages" class="btn col-6">Send Test Messages</button>
+        </div>
+    </footer>
 </div>
 <script src="~/lib/signalr/dist/browser/signalr.js"></script>
 <script src="~/js/serverEvents.js"></script>

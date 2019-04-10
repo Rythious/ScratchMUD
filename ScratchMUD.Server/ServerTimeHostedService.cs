@@ -19,7 +19,7 @@ namespace ScratchMUD.Server
 
         public async void TrackMinutes(object state)
         {
-            await _hubContext.Clients.All.SendAsync("ReceiveMessage", DateTime.Now.ToString());
+            await _hubContext.Clients.All.SendAsync("ReceiveServerCreatedMessage", DateTime.Now.ToString());
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
