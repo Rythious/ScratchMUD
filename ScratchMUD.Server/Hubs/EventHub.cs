@@ -44,7 +44,7 @@ namespace ScratchMUD.Server.Hubs
         {
             for (int i = 1; i <= countOfMessages; i++)
             {
-                Thread.Sleep(1500);
+                Thread.Sleep(1000);
                 var message = $"Test message {i}";
                 Console.WriteLine(message);
                 await SendMessage(message);

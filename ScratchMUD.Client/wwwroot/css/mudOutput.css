@@ -1,25 +1,48 @@
-﻿ul.mudOutputList {
+﻿li.mudOutputItem {
     display: flex;
-    overflow-y: auto;
-
-    flex-direction: column;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    align-content: flex-end;
-    justify-content: center;
-    margin-bottom: 5px;
-    background-color: dimgray;
-    font-family: Consolas;
-    color: lightgray;
-    -webkit-flex-flow: row wrap;
-    height: 400px;
-    min-height: 0px;
-}
-
-li.mudOutputItem {
     list-style-type:none;
     margin: 5px;
     padding: 2px;
-    color: white;
+    color: black;
     width: 100%;
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.wrapper > * {
+    padding: 20px;
+}
+
+.page-main {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex-grow: 1;
+    background-color: dimgray;
+    overflow-y: auto;
+    flex-wrap: wrap;
+    align-content: flex-end;
+    font-family: Consolas;
+    color: lightgray;
+    height: 0px;
+    min-height: 0px;
+}
+
+.page-footer {
+    display: flex;
+    flex-direction: column;
+}
+
+.page-footer div {
+    display: flex;
 }
