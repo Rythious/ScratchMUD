@@ -84,15 +84,6 @@ function enableSendUserCommandButton() {
         event.preventDefault();
     });
 
-    userCommandTextField.addEventListener("keyup", (e: KeyboardEvent) => {
-        if (e.keyCode === 13) {
-            const commandString = userCommandTextField.value;
-            sendClientMessage(commandString);
-            userCommandForm.reset();
-            e.preventDefault();
-        }
-    });
-
     sendUserCommandButton.disabled = false;
 }
 

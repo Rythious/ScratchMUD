@@ -68,14 +68,6 @@ function enableSendUserCommandButton() {
         userCommandForm.reset();
         event.preventDefault();
     });
-    userCommandTextField.addEventListener("keyup", function (e) {
-        if (e.keyCode === 13) {
-            var commandString = userCommandTextField.value;
-            sendClientMessage(commandString);
-            userCommandForm.reset();
-            e.preventDefault();
-        }
-    });
     sendUserCommandButton.disabled = false;
 }
 function sendClientMessage(message) {
