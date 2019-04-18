@@ -328,8 +328,3 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
-
-# Compiled Javascript
-**/wwwroot/js
-
-ScratchMUD\.Client/wwwroot/dist/js/
