@@ -331,3 +331,5 @@ ASALocalRun/
 
 # Compiled Javascript
 **/wwwroot/js
+
+ScratchMUD\.Client/wwwroot/dist/js/

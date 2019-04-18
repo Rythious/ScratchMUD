@@ -1,13 +1,14 @@
-import * as signalR from "@aspnet/signalr";
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var signalR = require("@aspnet/signalr");
 var sendTestMessagesButton = document.querySelector("#sendTestMessages");
 var sendUserCommandButton = document.querySelector("#sendUserCommand");
 var userCommandTextField = document.querySelector("#userCommand");
 var connectToSignalRButton = document.querySelector("#connectEventHub");
 var mudOutputWindow = document.querySelector("#mudOutputWindow");
 var mudOutputList = document.querySelector("#mudOutputList");
-var connection = new signalR.HubConnectionBuilder()
-    .withUrl("https://localhost:5021/EventHub", 0)
-    .build();
+var userCommandForm = document.querySelector("#userCommandForm");
+var connection = new signalR.HubConnectionBuilder().withUrl("https://localhost:5021/EventHub", 0).build();
 // While not connected to SignalR, disable the UI that relies upon it.
 sendTestMessagesButton.disabled = true;
 sendUserCommandButton.disabled = true;
@@ -64,13 +65,8 @@ function enableSendUserCommandButton() {
     sendUserCommandButton.addEventListener("click", function (event) {
         var commandString = userCommandTextField.value;
         sendClientMessage(commandString);
+        userCommandForm.reset();
         event.preventDefault();
-    });
-    userCommandTextField.addEventListener("keyup", function (e) {
-        if (e.keyCode === 13) {
-            var commandString = userCommandTextField.value;
-            sendClientMessage(commandString);
-        }
     });
     sendUserCommandButton.disabled = false;
 }
@@ -79,4 +75,3 @@ function sendClientMessage(message) {
         return console.error(err.toString());
     });
 }
-//# sourceMappingURL=serverEvents.js.map
