@@ -45,7 +45,7 @@ namespace ScratchMUD.Server
             //app.UseCors("allowAll");
             app.UseCors(builder =>
             {
-                builder.WithOrigins("http://creatorsarelegion.azurewebsites.net")
+                builder.WithOrigins("http://creatorsarelegion.azurewebsites.net", "https://creatorsarelegion.azurewebsites.net")
                     .AllowAnyHeader()
                     .WithMethods("GET", "POST")
                     .AllowCredentials();
