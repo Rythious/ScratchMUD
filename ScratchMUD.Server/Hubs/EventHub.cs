@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
-using ScratchMUD.Server.DataObjects;
 using System;
+using System.Data.SqlClient;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,7 +11,9 @@ namespace ScratchMUD.Server.Hubs
     {
         private readonly IConfiguration _configuration;
 
-        public EventHub(IConfiguration configuration)
+        public EventHub(
+            IConfiguration configuration
+        )
         {
             _configuration = configuration;
         }
@@ -31,10 +33,30 @@ namespace ScratchMUD.Server.Hubs
         {
             Task.Run(() => SendMessage($"A new client has connected on {Context.ConnectionId}."));
 
-            var room = new Room();
-            _configuration.Bind("Room", room);
+            var connectionString = _configuration.GetValue<string>("ConnectionStrings:ScratchMudServer");
 
-            Clients.Client(Context.ConnectionId).SendAsync("ReceiveRoomMessage", $"{room.Description}");
+            try
+            {
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    using (var command = new SqlCommand("SELECT TOP 1 FullDescription FROM ScratchMUD.dbo.RoomTranslation", connection))
+                    {
+                        using (var reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                Clients.Client(Context.ConnectionId).SendAsync("ReceiveRoomMessage", $"{reader.GetString(0)}");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Clients.Client(Context.ConnectionId).SendAsync("ReceiveRoomMessage", $"{ex.ToString()}");
+            }
 
             return base.OnConnectedAsync();
         }

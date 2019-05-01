@@ -9,6 +9,7 @@ var mudOutputWindow = document.querySelector("#mudOutputWindow");
 var mudOutputList = document.querySelector("#mudOutputList");
 var userCommandForm = document.querySelector("#userCommandForm");
 var connection = new signalR.HubConnectionBuilder().withUrl("https://creatorsarelegionserver.azurewebsites.net/EventHub", 0).build();
+//const connection = new signalR.HubConnectionBuilder().withUrl("https://localhost:5021/EventHub", 0).build();
 // While not connected to SignalR, disable the UI that relies upon it.
 sendTestMessagesButton.disabled = true;
 sendUserCommandButton.disabled = true;
