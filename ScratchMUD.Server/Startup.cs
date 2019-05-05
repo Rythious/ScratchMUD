@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ScratchMUD.Server.HostedServices;
 using ScratchMUD.Server.Hubs;
 
 namespace ScratchMUD.Server
@@ -27,6 +28,7 @@ namespace ScratchMUD.Server
             });
             services.AddHostedService<ServerTimeHostedService>();
             services.AddSingleton<EventHub>();
+            services.AddTransient<PlayerContext>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
