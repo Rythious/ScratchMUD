@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using ScratchMUD.Server.Commands;
+using ScratchMUD.Server.Models;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Hubs
@@ -13,20 +13,23 @@ namespace ScratchMUD.Server.Hubs
     {
         private readonly IConfiguration _configuration;
         private readonly PlayerContext playerContext;
-        private readonly IDictionary<string,ICommand> commandDictionary;
+        private readonly IDictionary<string, ICommand> commandDictionary;
 
         public EventHub(
             IConfiguration configuration,
-            PlayerContext playerContext
+            PlayerContext playerContext,
+            EditingState editingState
         )
         {
             _configuration = configuration;
             this.playerContext = playerContext;
-
             commandDictionary = new Dictionary<string, ICommand>
             {
+                [RoomEditCommand.NAME] = new RoomEditCommand(editingState, playerContext),
                 [SayCommand.NAME] = new SayCommand(playerContext)
             };
+
+            commandDictionary[HelpCommand.NAME] = new HelpCommand(commandDictionary);
         }
 
         //TODO: This will be replaced with a method that sends some sort of event object.
@@ -41,18 +44,21 @@ namespace ScratchMUD.Server.Hubs
 
             var command = SplitCommandFromParameters(message, out string[] parameters);
 
-            string output;
+            var outputMessages = new List<string>();
 
             if (commandDictionary.ContainsKey(command))
             {
-                output = await commandDictionary[command].ExecuteAsync(parameters);
+                outputMessages = await commandDictionary[command].ExecuteAsync(parameters);
             }
             else
             {
-                output = $"'{command}' is not a valid command";
+                outputMessages.Add($"'{command}' is not a valid command");
             }
 
-            await Clients.All.SendAsync("ReceiveClientCreatedMessage", output);
+            foreach (var outputItem in outputMessages)
+            {
+                await Clients.All.SendAsync("ReceiveServerCreatedMessage", outputItem);
+            }
         }
 
         private string SplitCommandFromParameters(string input, out string[] parameters)
@@ -70,7 +76,7 @@ namespace ScratchMUD.Server.Hubs
                 parameters = new string[0];
             }
 
-            return stringParts[0];
+            return stringParts[0].ToLower();
         }
 
         public override Task OnConnectedAsync()
@@ -103,18 +109,6 @@ namespace ScratchMUD.Server.Hubs
             }
 
             return base.OnConnectedAsync();
-        }
-
-        //Throwaway method that is here to test connection between client and server.
-        public async Task StartTestMessages(int countOfMessages)
-        {
-            for (int i = 1; i <= countOfMessages; i++)
-            {
-                Thread.Sleep(1000);
-                var message = $"Test message {i}";
-                Console.WriteLine(message);
-                await SendMessage(message);
-            }
         }
     }
 }

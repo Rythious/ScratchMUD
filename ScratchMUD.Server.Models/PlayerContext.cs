@@ -1,4 +1,4 @@
-﻿namespace ScratchMUD.Server
+﻿namespace ScratchMUD.Server.Models
 {
     public class PlayerContext
     {

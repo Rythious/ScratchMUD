@@ -1,9 +1,13 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Commands
 {
     internal interface ICommand
     {
-        Task<string> ExecuteAsync(params string[] parameters);
+        string Name { get; }
+        Task<List<string>> ExecuteAsync(params string[] parameters);
+        string SyntaxHelp();
+        string GeneralHelp();
     }
 }
