@@ -5,7 +5,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ScratchMUD.Server
+namespace ScratchMUD.Server.HostedServices
 {
     public class ServerTimeHostedService : IHostedService, IDisposable
     {

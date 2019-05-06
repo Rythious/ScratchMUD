@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
+using ScratchMUD.Server.Commands;
+using ScratchMUD.Server.Models;
+using ScratchMUD.Server.Models.Constants;
 using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Hubs
@@ -10,12 +13,24 @@ namespace ScratchMUD.Server.Hubs
     public class EventHub : Hub
     {
         private readonly IConfiguration _configuration;
+        private readonly PlayerContext playerContext;
+        private readonly IDictionary<string, ICommand> commandDictionary;
 
         public EventHub(
-            IConfiguration configuration
+            IConfiguration configuration,
+            PlayerContext playerContext,
+            EditingState editingState
         )
         {
             _configuration = configuration;
+            this.playerContext = playerContext;
+            commandDictionary = new Dictionary<string, ICommand>
+            {
+                [RoomEditCommand.NAME] = new RoomEditCommand(editingState, playerContext),
+                [SayCommand.NAME] = new SayCommand(playerContext)
+            };
+
+            commandDictionary[HelpCommand.NAME] = new HelpCommand(commandDictionary);
         }
 
         //TODO: This will be replaced with a method that sends some sort of event object.
@@ -26,13 +41,67 @@ namespace ScratchMUD.Server.Hubs
 
         public async Task RelayClientMessage(string message)
         {
-            await Clients.All.SendAsync("ReceiveClientCreatedMessage", $"{Context.ConnectionId} says \"{message}\"");
+            playerContext.Name = Context.ConnectionId;
+
+            await ExecuteClientCommand(message);
+        }
+
+        private async Task ExecuteClientCommand(string message)
+        {
+            var command = SplitCommandFromParameters(message, out string[] parameters);
+
+            var outputMessages = new List<(CommunicationChannel CommChannel, string Message)>();
+
+            if (commandDictionary.ContainsKey(command))
+            {
+                outputMessages = await commandDictionary[command].ExecuteAsync(parameters);
+            }
+            else
+            {
+                outputMessages.Add((CommunicationChannel.Self, $"'{command}' is not a valid command"));
+            }
+
+            foreach (var outputItem in outputMessages)
+            {
+                if (outputItem.CommChannel == CommunicationChannel.Self)
+                {
+                    await Clients.Client(Context.ConnectionId).SendAsync("ReceiveServerCreatedMessage", outputItem.Message);
+                }
+                else if (outputItem.CommChannel == CommunicationChannel.Everyone)
+                {
+                    await Clients.All.SendAsync("ReceiveServerCreatedMessage", outputItem.Message);
+                }
+            }
+        }
+
+        private string SplitCommandFromParameters(string input, out string[] parameters)
+        {
+            var stringParts = input.Split(" ");
+
+            if (stringParts.Length > 1)
+            {
+                parameters = new string[stringParts.Length - 1];
+
+                Array.Copy(stringParts, 1, parameters, 0, stringParts.Length - 1);
+            }
+            else
+            {
+                parameters = new string[0];
+            }
+
+            return stringParts[0].ToLower();
         }
 
         public override Task OnConnectedAsync()
         {
             Task.Run(() => SendMessage($"A new client has connected on {Context.ConnectionId}."));
+            GetPlayerRoom();
 
+            return base.OnConnectedAsync();
+        }
+
+        private void GetPlayerRoom()
+        {
             var connectionString = _configuration.GetValue<string>("ConnectionStrings:ScratchMudServer");
 
             try
@@ -56,20 +125,6 @@ namespace ScratchMUD.Server.Hubs
             catch (SqlException ex)
             {
                 Clients.Client(Context.ConnectionId).SendAsync("ReceiveRoomMessage", $"{ex.ToString()}");
-            }
-
-            return base.OnConnectedAsync();
-        }
-
-        //Throwaway method that is here to test connection between client and server.
-        public async Task StartTestMessages(int countOfMessages)
-        {
-            for (int i = 1; i <= countOfMessages; i++)
-            {
-                Thread.Sleep(1000);
-                var message = $"Test message {i}";
-                Console.WriteLine(message);
-                await SendMessage(message);
             }
         }
     }
