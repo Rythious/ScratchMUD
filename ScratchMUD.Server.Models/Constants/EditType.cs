@@ -1,4 +1,4 @@
-﻿namespace ScratchMUD.Server.Models
+﻿namespace ScratchMUD.Server.Models.Constants
 {
     public enum EditType
     {

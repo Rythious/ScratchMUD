@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using ScratchMUD.Server.Models.Constants;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Commands
@@ -6,7 +7,7 @@ namespace ScratchMUD.Server.Commands
     internal interface ICommand
     {
         string Name { get; }
-        Task<List<string>> ExecuteAsync(params string[] parameters);
+        Task<List<(CommunicationChannel, string)>> ExecuteAsync(params string[] parameters);
         string SyntaxHelp();
         string GeneralHelp();
     }

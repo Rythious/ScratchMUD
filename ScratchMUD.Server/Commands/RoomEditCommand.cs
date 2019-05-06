@@ -1,4 +1,5 @@
 ﻿using ScratchMUD.Server.Models;
+using ScratchMUD.Server.Models.Constants;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -21,46 +22,46 @@ namespace ScratchMUD.Server.Commands
             this.playerContext = playerContext;
         }
 
-        public Task<List<string>> ExecuteAsync(params string[] parameters)
+        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(params string[] parameters)
         {
-            var output = new List<string>();
+            var output = new List<(CommunicationChannel, string)>();
 
             if (parameters.Length == 0)
             {
-                EnterEditingMode(output);
+                output.Add((CommunicationChannel.Self, EnterEditingModeWithResponse()));
             }
             else if (parameters.Length == 1)
             {
                 if (parameters[0].ToLower() == "exit")
                 {
-                    ExitEditingMode(output);
+                    output.Add((CommunicationChannel.Self, ExitEditingModeWithResponse()));
                 }
             }
 
             return Task.Run(() => output);
         }
 
-        private void EnterEditingMode(List<string> output)
+        private string EnterEditingModeWithResponse()
         {
             //TODO: See if the current player is listed as an editor for the current area.
 
             if (editingState.IsPlayerCurrentlyEditing(playerContext.Name, out EditType? editType))
             {
-                output.Add($"Player is already editing a { editType }!");
+                return $"Player is already editing a { editType }!";
             }
             else
             {
                 editingState.AddPlayerEditor(playerContext.Name, EditType.Room);
 
-                output.Add("You are editing the room.");
+                return "You are editing the room.";
             }
         }
 
-        private void ExitEditingMode(List<string> output)
+        private string ExitEditingModeWithResponse()
         {
             editingState.RemovePlayerEditor(playerContext.Name);
 
-            output.Add("You are no longer editing the room.");
+            return "You are no longer editing the room.";
         }
 
         public string GeneralHelp()

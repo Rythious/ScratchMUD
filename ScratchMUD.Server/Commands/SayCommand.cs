@@ -1,4 +1,5 @@
 ﻿using ScratchMUD.Server.Models;
+using ScratchMUD.Server.Models.Constants;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -16,16 +17,16 @@ namespace ScratchMUD.Server.Commands
             this.playerContext = playerContext;
         }
 
-        public Task<List<string>> ExecuteAsync(params string[] parameters)
+        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(params string[] parameters)
         {
-            string output = string.Empty;
+            var output = (CommunicationChannel.Self, string.Empty);
 
             if (parameters.Length > 0)
             {
-                output = $"{playerContext.Name} says \"{parameters[0]}\"";
+                output = (CommunicationChannel.Everyone, $"{playerContext.Name} says \"{string.Join(" ", parameters)}\"");
             }
 
-            return Task.Run(() => new List<string> { output });
+            return Task.Run(() => new List<(CommunicationChannel, string)> { output });
         }
 
         public string SyntaxHelp()

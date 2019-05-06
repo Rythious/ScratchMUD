@@ -1,5 +1,5 @@
 ﻿using System;
-using ScratchMUD.Server.Models;
+using ScratchMUD.Server.Models.Constants;
 
 namespace ScratchMUD.Server.Exceptions
 {

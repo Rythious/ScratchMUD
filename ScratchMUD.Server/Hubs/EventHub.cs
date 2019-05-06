@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using ScratchMUD.Server.Commands;
 using ScratchMUD.Server.Models;
+using ScratchMUD.Server.Models.Constants;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -42,9 +43,14 @@ namespace ScratchMUD.Server.Hubs
         {
             playerContext.Name = Context.ConnectionId;
 
+            await ExecuteClientCommand(message);
+        }
+
+        private async Task ExecuteClientCommand(string message)
+        {
             var command = SplitCommandFromParameters(message, out string[] parameters);
 
-            var outputMessages = new List<string>();
+            var outputMessages = new List<(CommunicationChannel CommChannel, string Message)>();
 
             if (commandDictionary.ContainsKey(command))
             {
@@ -52,12 +58,19 @@ namespace ScratchMUD.Server.Hubs
             }
             else
             {
-                outputMessages.Add($"'{command}' is not a valid command");
+                outputMessages.Add((CommunicationChannel.Self, $"'{command}' is not a valid command"));
             }
 
             foreach (var outputItem in outputMessages)
             {
-                await Clients.All.SendAsync("ReceiveServerCreatedMessage", outputItem);
+                if (outputItem.CommChannel == CommunicationChannel.Self)
+                {
+                    await Clients.Client(Context.ConnectionId).SendAsync("ReceiveServerCreatedMessage", outputItem.Message);
+                }
+                else if (outputItem.CommChannel == CommunicationChannel.Everyone)
+                {
+                    await Clients.All.SendAsync("ReceiveServerCreatedMessage", outputItem.Message);
+                }
             }
         }
 
@@ -82,7 +95,13 @@ namespace ScratchMUD.Server.Hubs
         public override Task OnConnectedAsync()
         {
             Task.Run(() => SendMessage($"A new client has connected on {Context.ConnectionId}."));
+            GetPlayerRoom();
 
+            return base.OnConnectedAsync();
+        }
+
+        private void GetPlayerRoom()
+        {
             var connectionString = _configuration.GetValue<string>("ConnectionStrings:ScratchMudServer");
 
             try
@@ -107,8 +126,6 @@ namespace ScratchMUD.Server.Hubs
             {
                 Clients.Client(Context.ConnectionId).SendAsync("ReceiveRoomMessage", $"{ex.ToString()}");
             }
-
-            return base.OnConnectedAsync();
         }
     }
 }

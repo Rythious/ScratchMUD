@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using ScratchMUD.Server.Models.Constants;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -16,22 +17,25 @@ namespace ScratchMUD.Server.Commands
             this.commandDictionary = commandDictionary;
         }
 
-        public Task<List<string>> ExecuteAsync(params string[] parameters)
+        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(params string[] parameters)
         {
-            var output = new List<string>();
+            var output = new List<(CommunicationChannel, string)>();
 
             if (parameters.Length == 0)
             {
                 var availableCommands = BuildListOfAllAvailableCommands();
 
-                output = availableCommands;
+                foreach (var command in availableCommands)
+                {
+                    output.Add((CommunicationChannel.Self, command));
+                }
             }
             else if (parameters.Length == 1)
             {
                 if (commandDictionary.ContainsKey(parameters[0]))
                 {
-                    output.Add(commandDictionary[parameters[0]].SyntaxHelp());
-                    output.Add(commandDictionary[parameters[0]].GeneralHelp());
+                    output.Add((CommunicationChannel.Self, commandDictionary[parameters[0]].SyntaxHelp()));
+                    output.Add((CommunicationChannel.Self, commandDictionary[parameters[0]].GeneralHelp()));
                 }
             }
 
