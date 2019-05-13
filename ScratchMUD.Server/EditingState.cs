@@ -9,7 +9,7 @@ namespace ScratchMUD.Server
         internal Dictionary<string, EditType> playersCurrentlyEditing { get; } = new Dictionary<string, EditType>();
 
         // While I don't actually have players, the SignalR connection id is used as the key.
-        internal bool IsPlayerCurrentlyEditing(string signalRConnectionId, out EditType? editType)
+        internal virtual bool IsPlayerCurrentlyEditing(string signalRConnectionId, out EditType? editType)
         {
             editType = null;
 
@@ -23,7 +23,7 @@ namespace ScratchMUD.Server
             return false;
         }
 
-        internal void AddPlayerEditor(string signalRConnectionId, EditType editType)
+        internal virtual void AddPlayerEditor(string signalRConnectionId, EditType editType)
         {
             if (playersCurrentlyEditing.ContainsKey(signalRConnectionId))
             {
@@ -33,7 +33,7 @@ namespace ScratchMUD.Server
             playersCurrentlyEditing.Add(signalRConnectionId, editType);
         }
 
-        internal void RemovePlayerEditor(string signalRConnectionId)
+        internal virtual void RemovePlayerEditor(string signalRConnectionId)
         {
             playersCurrentlyEditing.Remove(signalRConnectionId);
         }

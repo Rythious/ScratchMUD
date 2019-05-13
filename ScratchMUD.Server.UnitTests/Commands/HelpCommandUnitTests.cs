@@ -10,6 +10,47 @@ namespace ScratchMUD.Server.UnitTests.Commands
 {
     public class HelpCommandUnitTests
     {
+        [Fact(DisplayName = "Name => Returns Help")]
+        public void NameReturnsHelp()
+        {
+            //Arrange
+            var helpCommand = new HelpCommand(new Dictionary<string, ICommand>());
+
+            //Act
+            var result = helpCommand.Name;
+
+            //Assert
+            Assert.Equal("help", result, ignoreCase: true);
+        }
+
+        [Fact(DisplayName = "SyntaxHelp => Returns a string that includes Help")]
+        public void SyntaxHelpReturnsAStringThatIncludesHelp()
+        {
+            //Arrange
+            var helpCommand = new HelpCommand(new Dictionary<string, ICommand>());
+
+            //Act
+            var result = helpCommand.SyntaxHelp();
+
+            //Assert
+            Assert.IsAssignableFrom<string>(result);
+            Assert.Contains("help", result, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact(DisplayName = "GeneralHelp => Returns a non-empty string")]
+        public void GeneralHelpReturnsANonEmptyString()
+        {
+            //Arrange
+            var helpCommand = new HelpCommand(new Dictionary<string, ICommand>());
+
+            //Act
+            var result = helpCommand.GeneralHelp();
+
+            //Assert
+            Assert.IsAssignableFrom<string>(result);
+            Assert.False(string.IsNullOrEmpty(result));
+        }
+
         [Fact(DisplayName = "ExecuteAsync => When no parameters are sent in, the available commands are listed in alphabetical order")]
         public async Task ExecuteAsyncWhenNoParametersAreSentInTheAvailableCommandsAreListedInAlphabeticalOrder()
         {
@@ -22,7 +63,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             {
                 [ALPHABETICALLY_SECOND_COMMAND] = null,
                 [ALPHABETICALLY_THIRD_COMMAND] = null,
-                [ALPHABETICALLY_FIRST_COMMAND] = null                
+                [ALPHABETICALLY_FIRST_COMMAND] = null
             };
 
             var helpCommand = new HelpCommand(commandDictionary);

@@ -25,6 +25,10 @@ namespace ScratchMUD.Server.Commands
             {
                 output = (CommunicationChannel.Everyone, $"{playerContext.Name} says \"{string.Join(" ", parameters)}\"");
             }
+            else
+            {
+                output = (CommunicationChannel.Self, $"You open your mouth as if to say something, but there are no words.");
+            }
 
             return Task.Run(() => new List<(CommunicationChannel, string)> { output });
         }
