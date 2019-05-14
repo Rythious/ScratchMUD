@@ -5,7 +5,7 @@ namespace ScratchMUD.Server.Exceptions
 {
     public class PlayerAlreadyEditingException : Exception
     {
-        public PlayerAlreadyEditingException(EditType editType) : base($"Player is already editing a {editType}")
+        public PlayerAlreadyEditingException(string playerName, EditType editType) : base($"{playerName} is already editing a {editType}")
         {
         }
     }

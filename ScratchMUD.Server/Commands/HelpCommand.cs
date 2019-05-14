@@ -44,7 +44,7 @@ namespace ScratchMUD.Server.Commands
             }
             else
             {
-                output.Add((CommunicationChannel.Self, $"Invalid syntax of HELP command: " + SyntaxHelp()));
+                output.Add((CommunicationChannel.Self, $"Invalid syntax of {Name.ToUpper()} command: " + SyntaxHelp()));
             }
 
             return Task.Run(() => output);
