@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using ScratchMUD.Server.Commands;
+using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
-using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
@@ -33,6 +33,14 @@ namespace ScratchMUD.Server.Hubs
             commandDictionary[HelpCommand.NAME] = new HelpCommand(commandDictionary);
         }
 
+        public override Task OnConnectedAsync()
+        {
+            Task.Run(() => SendMessage($"A new client has connected on {Context.ConnectionId}."));
+            GetPlayerRoom();
+
+            return base.OnConnectedAsync();
+        }
+
         //TODO: This will be replaced with a method that sends some sort of event object.
         public async Task SendMessage(string message)
         {
@@ -48,7 +56,7 @@ namespace ScratchMUD.Server.Hubs
 
         private async Task ExecuteClientCommand(string message)
         {
-            var command = SplitCommandFromParameters(message, out string[] parameters);
+            var command = CommandParser.SplitCommandFromParameters(message, out string[] parameters);
 
             var outputMessages = new List<(CommunicationChannel CommChannel, string Message)>();
 
@@ -61,6 +69,11 @@ namespace ScratchMUD.Server.Hubs
                 outputMessages.Add((CommunicationChannel.Self, $"'{command}' is not a valid command"));
             }
 
+            await SendMessagesToProperChannels(outputMessages);
+        }
+
+        private async Task SendMessagesToProperChannels(List<(CommunicationChannel CommChannel, string Message)> outputMessages)
+        {
             foreach (var outputItem in outputMessages)
             {
                 if (outputItem.CommChannel == CommunicationChannel.Self)
@@ -72,32 +85,6 @@ namespace ScratchMUD.Server.Hubs
                     await Clients.All.SendAsync("ReceiveServerCreatedMessage", outputItem.Message);
                 }
             }
-        }
-
-        private string SplitCommandFromParameters(string input, out string[] parameters)
-        {
-            var stringParts = input.Split(" ");
-
-            if (stringParts.Length > 1)
-            {
-                parameters = new string[stringParts.Length - 1];
-
-                Array.Copy(stringParts, 1, parameters, 0, stringParts.Length - 1);
-            }
-            else
-            {
-                parameters = new string[0];
-            }
-
-            return stringParts[0].ToLower();
-        }
-
-        public override Task OnConnectedAsync()
-        {
-            Task.Run(() => SendMessage($"A new client has connected on {Context.ConnectionId}."));
-            GetPlayerRoom();
-
-            return base.OnConnectedAsync();
         }
 
         private void GetPlayerRoom()

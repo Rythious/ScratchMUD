@@ -1,4 +1,5 @@
-﻿using ScratchMUD.Server.Models;
+﻿using ScratchMUD.Server.Infrastructure;
+using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -36,6 +37,11 @@ namespace ScratchMUD.Server.Commands
                 {
                     output.Add((CommunicationChannel.Self, ExitEditingModeWithResponse()));
                 }
+            }
+
+            if (output.Count == 0)
+            {
+                output.Add((CommunicationChannel.Self, $"Invalid syntax of {Name.ToUpper()} command: " + SyntaxHelp()));
             }
 
             return Task.Run(() => output);

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ScratchMUD.Server.HostedServices;
 using ScratchMUD.Server.Hubs;
+using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models;
 
 namespace ScratchMUD.Server
