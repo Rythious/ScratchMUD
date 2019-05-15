@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using Microsoft.Extensions.Configuration;
+using Moq;
 using ScratchMUD.Server.Commands;
 using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models;
@@ -11,11 +12,21 @@ namespace ScratchMUD.Server.UnitTests.Commands
 {
     public class RoomEditCommandUnitTests
     {
+        private readonly IConfiguration configuration;
+
+        public RoomEditCommandUnitTests()
+        {
+            var configurationBuilder = new ConfigurationBuilder();
+            configuration = configurationBuilder.Build();
+        }
+
         [Fact(DisplayName = "Name => Returns RoomEdit")]
         public void NameReturnsRoomEdit()
         {
             //Arrange
-            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext());
+
+
+            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext(), configuration);
 
             //Act
             var result = roomEditCommand.Name;
@@ -28,10 +39,10 @@ namespace ScratchMUD.Server.UnitTests.Commands
         public void SyntaxHelpReturnsAStringThatIncludesRoomEdit()
         {
             //Arrange
-            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext());
+            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext(), configuration);
 
             //Act
-            var result = roomEditCommand.SyntaxHelp();
+            var result = roomEditCommand.SyntaxHelp;
 
             //Assert
             Assert.IsAssignableFrom<string>(result);
@@ -42,10 +53,10 @@ namespace ScratchMUD.Server.UnitTests.Commands
         public void GeneralHelpReturnsANonEmptyString()
         {
             //Arrange
-            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext());
+            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext(), configuration);
 
             //Act
-            var result = roomEditCommand.GeneralHelp();
+            var result = roomEditCommand.GeneralHelp;
 
             //Assert
             Assert.IsAssignableFrom<string>(result);
@@ -68,7 +79,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
 
             mockEditingState.Setup(es => es.AddPlayerEditor(playerContext.Name, EditType.Room)).Verifiable();
 
-            var roomEditCommand = new RoomEditCommand(mockEditingState.Object, playerContext);
+            var roomEditCommand = new RoomEditCommand(mockEditingState.Object, playerContext, configuration);
 
             //Act
             var result = await roomEditCommand.ExecuteAsync();
@@ -97,7 +108,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             EditType? editType = EditType.Room;
             mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(playerContext.Name, out editType)).Returns(true);
 
-            var roomEditCommand = new RoomEditCommand(mockEditingState.Object, playerContext);
+            var roomEditCommand = new RoomEditCommand(mockEditingState.Object, playerContext, configuration);
 
             //Act
             var result = await roomEditCommand.ExecuteAsync();
@@ -125,7 +136,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
 
             mockEditingState.Setup(es => es.RemovePlayerEditor(playerContext.Name)).Verifiable();
 
-            var roomEditCommand = new RoomEditCommand(mockEditingState.Object, playerContext);
+            var roomEditCommand = new RoomEditCommand(mockEditingState.Object, playerContext, configuration);
 
             //Act
             var result = await roomEditCommand.ExecuteAsync("exit");
@@ -144,7 +155,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
         public async Task ExecuteAsyncWhenPassedOneParameterThatDoesNotMatchAHandledCaseAnErrorMessageIsReturned()
         {
             //Arrange
-            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext());
+            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext(), configuration);
 
             //Act
             var result = await roomEditCommand.ExecuteAsync("purple");
@@ -162,7 +173,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
         public async Task ExecuteAsyncWhenPassedMoreThanOneParameterAnErrorMessageIsReturned()
         {
             //Arrange
-            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext());
+            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext(), configuration);
 
             //Act
             var result = await roomEditCommand.ExecuteAsync("one", "two");

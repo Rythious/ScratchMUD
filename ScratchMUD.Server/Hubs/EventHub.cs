@@ -12,7 +12,7 @@ namespace ScratchMUD.Server.Hubs
 {
     public class EventHub : Hub
     {
-        private readonly IConfiguration _configuration;
+        private readonly IConfiguration configuration;
         private readonly PlayerContext playerContext;
         private readonly IDictionary<string, ICommand> commandDictionary;
 
@@ -22,11 +22,11 @@ namespace ScratchMUD.Server.Hubs
             EditingState editingState
         )
         {
-            _configuration = configuration;
+            this.configuration = configuration;
             this.playerContext = playerContext;
             commandDictionary = new Dictionary<string, ICommand>
             {
-                [RoomEditCommand.NAME] = new RoomEditCommand(editingState, playerContext),
+                [RoomEditCommand.NAME] = new RoomEditCommand(editingState, playerContext, configuration),
                 [SayCommand.NAME] = new SayCommand(playerContext)
             };
 
@@ -89,7 +89,7 @@ namespace ScratchMUD.Server.Hubs
 
         private void GetPlayerRoom()
         {
-            var connectionString = _configuration.GetValue<string>("ConnectionStrings:ScratchMudServer");
+            var connectionString = configuration.GetValue<string>("ConnectionStrings:ScratchMudServer");
 
             try
             {

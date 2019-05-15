@@ -8,7 +8,8 @@ namespace ScratchMUD.Server.Commands
     {
         string Name { get; }
         Task<List<(CommunicationChannel, string)>> ExecuteAsync(params string[] parameters);
-        string SyntaxHelp();
-        string GeneralHelp();
+        string SyntaxHelp { get; }
+
+        string GeneralHelp { get; }
     }
 }

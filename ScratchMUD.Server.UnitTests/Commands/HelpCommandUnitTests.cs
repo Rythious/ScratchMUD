@@ -30,7 +30,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var helpCommand = new HelpCommand(new Dictionary<string, ICommand>());
 
             //Act
-            var result = helpCommand.SyntaxHelp();
+            var result = helpCommand.SyntaxHelp;
 
             //Assert
             Assert.IsAssignableFrom<string>(result);
@@ -44,7 +44,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var helpCommand = new HelpCommand(new Dictionary<string, ICommand>());
 
             //Act
-            var result = helpCommand.GeneralHelp();
+            var result = helpCommand.GeneralHelp;
 
             //Assert
             Assert.IsAssignableFrom<string>(result);
@@ -119,8 +119,8 @@ namespace ScratchMUD.Server.UnitTests.Commands
 
             var mockHelpCommand = new Mock<ICommand>(MockBehavior.Strict);
 
-            mockHelpCommand.Setup(h => h.SyntaxHelp()).Returns("syntax statement");
-            mockHelpCommand.Setup(h => h.GeneralHelp()).Returns("help statement");
+            mockHelpCommand.Setup(h => h.SyntaxHelp).Returns("syntax statement");
+            mockHelpCommand.Setup(h => h.GeneralHelp).Returns("help statement");
 
             var commandDictionary = new Dictionary<string, ICommand>
             {

@@ -29,7 +29,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var sayCommand = new SayCommand(new PlayerContext());
 
             //Act
-            var result = sayCommand.SyntaxHelp();
+            var result = sayCommand.SyntaxHelp;
 
             //Assert
             Assert.IsAssignableFrom<string>(result);
@@ -43,7 +43,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var sayCommand = new SayCommand(new PlayerContext());
 
             //Act
-            var result = sayCommand.GeneralHelp();
+            var result = sayCommand.GeneralHelp;
 
             //Assert
             Assert.IsAssignableFrom<string>(result);

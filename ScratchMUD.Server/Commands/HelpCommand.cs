@@ -10,12 +10,18 @@ namespace ScratchMUD.Server.Commands
         internal const string NAME = "help";
         private readonly IDictionary<string, ICommand> commandDictionary;
 
-        public string Name { get; } = NAME;
-
         internal HelpCommand(IDictionary<string, ICommand> commandDictionary)
         {
             this.commandDictionary = commandDictionary;
         }
+
+        #region Syntax, Help, and Name
+        public string Name { get; } = NAME;
+
+        public string SyntaxHelp => "HELP or HELP <COMMAND>";
+
+        public string GeneralHelp => "Returns helpful information about available commands.";
+        #endregion
 
         public Task<List<(CommunicationChannel, string)>> ExecuteAsync(params string[] parameters)
         {
@@ -34,8 +40,8 @@ namespace ScratchMUD.Server.Commands
             {
                 if (commandDictionary.ContainsKey(parameters[0]))
                 {
-                    output.Add((CommunicationChannel.Self, commandDictionary[parameters[0]].SyntaxHelp()));
-                    output.Add((CommunicationChannel.Self, commandDictionary[parameters[0]].GeneralHelp()));
+                    output.Add((CommunicationChannel.Self, commandDictionary[parameters[0]].SyntaxHelp));
+                    output.Add((CommunicationChannel.Self, commandDictionary[parameters[0]].GeneralHelp));
                 }
                 else
                 {
@@ -44,7 +50,7 @@ namespace ScratchMUD.Server.Commands
             }
             else
             {
-                output.Add((CommunicationChannel.Self, $"Invalid syntax of {Name.ToUpper()} command: " + SyntaxHelp()));
+                output.Add((CommunicationChannel.Self, $"Invalid syntax of {Name.ToUpper()} command: " + SyntaxHelp));
             }
 
             return Task.Run(() => output);
@@ -60,16 +66,6 @@ namespace ScratchMUD.Server.Commands
             }
 
             return commandNames;
-        }
-
-        public string SyntaxHelp()
-        {
-            return "HELP or HELP <COMMAND>";
-        }
-
-        public string GeneralHelp()
-        {
-            return "Returns helpful information about available commands.";
         }
     }
 }
