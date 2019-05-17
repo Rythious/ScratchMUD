@@ -2,6 +2,7 @@
 using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
+using ScratchMUD.Server.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,17 +16,17 @@ namespace ScratchMUD.Server.Commands
         private readonly string[] VALID_ACTIONS = new string[3] { "title", "short-description", "full-description" };
         private readonly EditingState editingState;
         private readonly PlayerContext playerContext;
-        private readonly ScratchMUDContext scratchMudContext;
+        private readonly IRoomRepository roomRepository;
 
         internal RoomEditCommand(
             EditingState editingState,
             PlayerContext playerContext,
-            ScratchMUDContext scratchMudContext
+            IRoomRepository roomRepository
         )
         {
             this.editingState = editingState;
             this.playerContext = playerContext;
-            this.scratchMudContext = scratchMudContext;
+            this.roomRepository = roomRepository;
         }
 
         #region Syntax, Help, and Name
@@ -86,13 +87,13 @@ namespace ScratchMUD.Server.Commands
                         switch (parameters[0].ToLower())
                         {
                             case "title":
-                                await UpdateTitle(valuePortionOfCommand);
+                                await roomRepository.UpdateTitle(valuePortionOfCommand);
                                 break;
                             case "short-description":
-                                await UpdateShortDescription(valuePortionOfCommand);
+                                await roomRepository.UpdateShortDescription(valuePortionOfCommand);
                                 break;
                             case "full-description":
-                                await UpdateFullDescription(valuePortionOfCommand);
+                                await roomRepository.UpdateFullDescription(valuePortionOfCommand);
                                 break;
                             default:
                                 break;
@@ -108,27 +109,6 @@ namespace ScratchMUD.Server.Commands
             }
 
             return null;
-        }
-
-        private async Task UpdateTitle(string title)
-        {
-            var room = scratchMudContext.RoomTranslation.First(rt => rt.RoomId == 1);
-            room.Title = title;
-            await scratchMudContext.SaveChangesAsync();
-        }
-
-        private async Task UpdateShortDescription(string shortDescription)
-        {
-            var room = scratchMudContext.RoomTranslation.First(rt => rt.RoomId == 1);
-            room.ShortDescription = shortDescription;
-            await scratchMudContext.SaveChangesAsync();
-        }
-
-        private async Task UpdateFullDescription(string fullDescription)
-        {
-            var room = scratchMudContext.RoomTranslation.First(rt => rt.RoomId == 1);
-            room.FullDescription = fullDescription;
-            await scratchMudContext.SaveChangesAsync();
         }
 
         private string EnterEditingModeWithResponse()

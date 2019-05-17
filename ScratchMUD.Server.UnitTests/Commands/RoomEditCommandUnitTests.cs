@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
-using Moq;
+﻿using Moq;
 using ScratchMUD.Server.Commands;
 using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
+using ScratchMUD.Server.Repositories;
 using System;
 using System.Threading.Tasks;
 using Xunit;
@@ -12,21 +12,18 @@ namespace ScratchMUD.Server.UnitTests.Commands
 {
     public class RoomEditCommandUnitTests
     {
-        private readonly IConfiguration configuration;
+        private readonly Mock<IRoomRepository> mockRoomRepository;
 
         public RoomEditCommandUnitTests()
         {
-            var configurationBuilder = new ConfigurationBuilder();
-            configuration = configurationBuilder.Build();
+            mockRoomRepository = new Mock<IRoomRepository>(MockBehavior.Strict);
         }
 
         [Fact(DisplayName = "Name => Returns RoomEdit")]
         public void NameReturnsRoomEdit()
         {
             //Arrange
-
-
-            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext());
+            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext(), mockRoomRepository.Object);
 
             //Act
             var result = roomEditCommand.Name;
@@ -39,7 +36,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
         public void SyntaxHelpReturnsAStringThatIncludesRoomEdit()
         {
             //Arrange
-            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext());
+            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext(), mockRoomRepository.Object);
 
             //Act
             var result = roomEditCommand.SyntaxHelp;
@@ -53,7 +50,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
         public void GeneralHelpReturnsANonEmptyString()
         {
             //Arrange
-            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext());
+            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext(), mockRoomRepository.Object);
 
             //Act
             var result = roomEditCommand.GeneralHelp;
@@ -79,7 +76,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
 
             mockEditingState.Setup(es => es.AddPlayerEditor(playerContext.Name, EditType.Room)).Verifiable();
 
-            var roomEditCommand = new RoomEditCommand(mockEditingState.Object, playerContext);
+            var roomEditCommand = new RoomEditCommand(mockEditingState.Object, playerContext, mockRoomRepository.Object);
 
             //Act
             var result = await roomEditCommand.ExecuteAsync();
@@ -108,7 +105,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             EditType? editType = EditType.Room;
             mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(playerContext.Name, out editType)).Returns(true);
 
-            var roomEditCommand = new RoomEditCommand(mockEditingState.Object, playerContext);
+            var roomEditCommand = new RoomEditCommand(mockEditingState.Object, playerContext, mockRoomRepository.Object);
 
             //Act
             var result = await roomEditCommand.ExecuteAsync();
@@ -136,7 +133,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
 
             mockEditingState.Setup(es => es.RemovePlayerEditor(playerContext.Name)).Verifiable();
 
-            var roomEditCommand = new RoomEditCommand(mockEditingState.Object, playerContext);
+            var roomEditCommand = new RoomEditCommand(mockEditingState.Object, playerContext, mockRoomRepository.Object);
 
             //Act
             var result = await roomEditCommand.ExecuteAsync("exit");
@@ -155,7 +152,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
         public async Task ExecuteAsyncWhenPassedOneParameterThatDoesNotMatchAHandledCaseAnErrorMessageIsReturned()
         {
             //Arrange
-            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext());
+            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext(), mockRoomRepository.Object);
 
             //Act
             var result = await roomEditCommand.ExecuteAsync("purple");
@@ -169,11 +166,11 @@ namespace ScratchMUD.Server.UnitTests.Commands
             Assert.Contains("invalid syntax", result[0].Item2, StringComparison.OrdinalIgnoreCase);
         }
 
-        [Fact(DisplayName = "ExecuteAsync => When passed more than one parameter, an error message is returned")]
-        public async Task ExecuteAsyncWhenPassedMoreThanOneParameterAnErrorMessageIsReturned()
+        [Fact(DisplayName = "ExecuteAsync => When passed more than one parameter and the first is not a valid action, an error message is returned")]
+        public async Task ExecuteAsyncWhenPassedMoreThanOneParameterAndTheFirstIsNotAValidActionAnErrorMessageIsReturned()
         {
             //Arrange
-            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext());
+            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext(), mockRoomRepository.Object);
 
             //Act
             var result = await roomEditCommand.ExecuteAsync("one", "two");
@@ -185,6 +182,34 @@ namespace ScratchMUD.Server.UnitTests.Commands
             Assert.Equal(CommunicationChannel.Self, result[0].Item1);
             Assert.IsAssignableFrom<string>(result[0].Item2);
             Assert.Contains("invalid syntax", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact(DisplayName = "ExecuteAsync => When passed more than one parameter and the first is a valid action but the player is not editing, an error message is returned")]
+        public async Task ExecuteAsyncWhenPassedMoreThanOneParameterAndTheFirstIsAValidActionButThePlayerIsNotEditingAnErrorMessageIsReturned()
+        {
+            //Arrange
+            var playerContext = new PlayerContext
+            {
+                Name = "Bamf"
+            };
+
+            var mockEditingState = new Mock<EditingState>(MockBehavior.Strict);
+
+            EditType? editType = EditType.Room;
+            mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(playerContext.Name, out editType)).Returns(false);
+
+            var roomEditCommand = new RoomEditCommand(mockEditingState.Object, playerContext, mockRoomRepository.Object);
+
+            //Act
+            var result = await roomEditCommand.ExecuteAsync("title", "two");
+
+            //Assert
+            Assert.NotNull(result);
+            Assert.True(result.Count == 1);
+            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
+            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
+            Assert.IsAssignableFrom<string>(result[0].Item2);
+            Assert.Contains("room edit mode", result[0].Item2, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

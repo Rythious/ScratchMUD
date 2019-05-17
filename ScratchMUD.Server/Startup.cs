@@ -8,6 +8,7 @@ using ScratchMUD.Server.HostedServices;
 using ScratchMUD.Server.Hubs;
 using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models;
+using ScratchMUD.Server.Repositories;
 
 namespace ScratchMUD.Server
 {
@@ -32,6 +33,7 @@ namespace ScratchMUD.Server
             services.AddHostedService<ServerTimeHostedService>();
             services.AddTransient<PlayerContext>();
             services.AddSingleton<EditingState>();
+            services.AddScoped<IRoomRepository, RoomRepository>();
             services.AddDbContext<ScratchMUDContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("ScratchMudServer"))
             );

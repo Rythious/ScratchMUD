@@ -3,8 +3,8 @@ using ScratchMUD.Server.Commands;
 using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
+using ScratchMUD.Server.Repositories;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Hubs
@@ -12,20 +12,20 @@ namespace ScratchMUD.Server.Hubs
     public class EventHub : Hub
     {
         private readonly PlayerContext playerContext;
-        private readonly ScratchMUDContext scratchMUDContext;
+        private readonly IRoomRepository roomRepository;
         private readonly IDictionary<string, ICommand> commandDictionary;
 
         public EventHub(
             PlayerContext playerContext,
             EditingState editingState,
-            ScratchMUDContext scratchMUDContext
+            IRoomRepository roomRepository
         )
         {
             this.playerContext = playerContext;
-            this.scratchMUDContext = scratchMUDContext;
+            this.roomRepository = roomRepository;
             commandDictionary = new Dictionary<string, ICommand>
             {
-                [RoomEditCommand.NAME] = new RoomEditCommand(editingState, playerContext, scratchMUDContext),
+                [RoomEditCommand.NAME] = new RoomEditCommand(editingState, playerContext, roomRepository),
                 [SayCommand.NAME] = new SayCommand(playerContext)
             };
 
@@ -88,9 +88,9 @@ namespace ScratchMUD.Server.Hubs
 
         private void GetPlayerRoom()
         {
-            var room = scratchMUDContext.RoomTranslation.First();
+            var roomDescription = roomRepository.GetRoomFullDescription(1);
 
-            Clients.Client(Context.ConnectionId).SendAsync("ReceiveRoomMessage", $"{room.FullDescription}");
+            Clients.Client(Context.ConnectionId).SendAsync("ReceiveRoomMessage", $"{roomDescription}");
         }
     }
 }
