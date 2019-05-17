@@ -1,9 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
 using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
+using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Commands
@@ -11,20 +12,20 @@ namespace ScratchMUD.Server.Commands
     public class RoomEditCommand : ICommand
     {
         internal const string NAME = "roomedit";
+        private readonly string[] VALID_ACTIONS = new string[3] { "title", "short-description", "full-description" };
         private readonly EditingState editingState;
         private readonly PlayerContext playerContext;
-        private readonly string connectionString;
+        private readonly ScratchMUDContext scratchMudContext;
 
         internal RoomEditCommand(
             EditingState editingState,
             PlayerContext playerContext,
-            IConfiguration configuration
+            ScratchMUDContext scratchMudContext
         )
         {
             this.editingState = editingState;
             this.playerContext = playerContext;
-
-            connectionString = configuration.GetValue<string>("ConnectionStrings:ScratchMudServer");
+            this.scratchMudContext = scratchMudContext;
         }
 
         #region Syntax, Help, and Name
@@ -52,22 +53,7 @@ namespace ScratchMUD.Server.Commands
             }
             else //parameters.Length > 1
             {
-                var response = string.Empty;
-
-                switch (parameters[0].ToLower())
-                {
-                    case "title":
-                        response = await UpdateTitleWithResponse(string.Join(" ", parameters, 1, parameters.Length - 1));
-                        break;
-                    case "short-description":
-                        response = await UpdateShortDescriptionWithResponse(string.Join(" ", parameters, 1, parameters.Length - 1));
-                        break;
-                    case "full-description":
-                        response = await UpdateFullDescriptionWithResponse(string.Join(" ", parameters, 1, parameters.Length - 1));
-                        break;
-                    default:
-                        break;
-                }
+                var response = await UpdateRoomDetailWithResponse(parameters);
 
                 if (!string.IsNullOrEmpty(response))
                 {
@@ -83,100 +69,66 @@ namespace ScratchMUD.Server.Commands
             return output;
         }
 
-        private async Task<string> UpdateTitleWithResponse(string title)
+        private async Task<string> UpdateRoomDetailWithResponse(string[] parameters)
         {
-            if (editingState.IsPlayerCurrentlyEditing(playerContext.Name, out EditType? _))
+            if (VALID_ACTIONS.Contains(parameters[0].ToLower()))
             {
-                try
+                if (!editingState.IsPlayerCurrentlyEditing(playerContext.Name, out EditType? editType) || editType != EditType.Room)
                 {
-                    using (var connection = new SqlConnection(connectionString))
+                    return "Must be in room edit mode.";
+                }
+                else
+                {
+                    var valuePortionOfCommand = string.Join(" ", parameters, 1, parameters.Length - 1);
+
+                    try
                     {
-                        connection.Open();
-
-                        //TODO: This is terrible and needs to be removed once an ORM is set up.
-                        using (var command = new SqlCommand($"UPDATE ScratchMUD.dbo.RoomTranslation SET Title = '{title}' WHERE RoomId = 1", connection))
+                        switch (parameters[0].ToLower())
                         {
-                            await command.ExecuteNonQueryAsync();
-
-                            return "Title updated."
-;
+                            case "title":
+                                await UpdateTitle(valuePortionOfCommand);
+                                break;
+                            case "short-description":
+                                await UpdateShortDescription(valuePortionOfCommand);
+                                break;
+                            case "full-description":
+                                await UpdateFullDescription(valuePortionOfCommand);
+                                break;
+                            default:
+                                break;
                         }
+
+                        return "Room updated.";
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        return $"Error updating room. Exception: {ex.Message}";
                     }
                 }
-                catch (SqlException ex)
-                {
-                    //TODO: Log this exception
-                    return $"Error updating room title. Exception: {ex.Message}";
-                }
             }
-            else
-            {
-                return "Cannot update room title without entering room edit mode.";
-            }
+
+            return null;
         }
 
-        private async Task<string> UpdateShortDescriptionWithResponse(string shortDescription)
+        private async Task UpdateTitle(string title)
         {
-            if (editingState.IsPlayerCurrentlyEditing(playerContext.Name, out EditType? _))
-            {
-                try
-                {
-                    using (var connection = new SqlConnection(connectionString))
-                    {
-                        connection.Open();
-
-                        //TODO: This is terrible and needs to be removed once an ORM is set up.
-                        using (var command = new SqlCommand($"UPDATE ScratchMUD.dbo.RoomTranslation SET ShortDescription = '{shortDescription}' WHERE RoomId = 1", connection))
-                        {
-                            await command.ExecuteNonQueryAsync();
-
-                            return "Short description updated."
-;
-                        }
-                    }
-                }
-                catch (SqlException ex)
-                {
-                    //TODO: Log this exception
-                    return $"Error updating room short description. Exception: {ex.Message}";
-                }
-            }
-            else
-            {
-                return "Cannot update room short description without entering room edit mode.";
-            }
+            var room = scratchMudContext.RoomTranslation.First(rt => rt.RoomId == 1);
+            room.Title = title;
+            await scratchMudContext.SaveChangesAsync();
         }
 
-        private async Task<string> UpdateFullDescriptionWithResponse(string fullDescriptionValue)
+        private async Task UpdateShortDescription(string shortDescription)
         {
-            if (editingState.IsPlayerCurrentlyEditing(playerContext.Name, out EditType? _))
-            {
-                try
-                {
-                    using (var connection = new SqlConnection(connectionString))
-                    {
-                        connection.Open();
+            var room = scratchMudContext.RoomTranslation.First(rt => rt.RoomId == 1);
+            room.ShortDescription = shortDescription;
+            await scratchMudContext.SaveChangesAsync();
+        }
 
-                        //TODO: This is terrible and needs to be removed once an ORM is set up.
-                        using (var command = new SqlCommand($"UPDATE ScratchMUD.dbo.RoomTranslation SET FullDescription = '{fullDescriptionValue}' WHERE RoomId = 1", connection))
-                        {
-                            await command.ExecuteNonQueryAsync();
-
-                            return "Full description updated."
-;
-                        }
-                    }
-                }
-                catch (SqlException ex)
-                {
-                    //TODO: Log this exception
-                    return $"Error updating room full description. Exception: {ex.Message}";
-                }
-            }
-            else
-            {
-                return "Cannot update room full description without entering room edit mode.";
-            }
+        private async Task UpdateFullDescription(string fullDescription)
+        {
+            var room = scratchMudContext.RoomTranslation.First(rt => rt.RoomId == 1);
+            room.FullDescription = fullDescription;
+            await scratchMudContext.SaveChangesAsync();
         }
 
         private string EnterEditingModeWithResponse()

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ScratchMUD.Server.HostedServices;
@@ -29,9 +30,11 @@ namespace ScratchMUD.Server
                 options.EnableDetailedErrors = true;
             });
             services.AddHostedService<ServerTimeHostedService>();
-            services.AddSingleton<EventHub>();
             services.AddTransient<PlayerContext>();
             services.AddSingleton<EditingState>();
+            services.AddDbContext<ScratchMUDContext>(options =>
+                options.UseSqlServer(Configuration.GetConnectionString("ScratchMudServer"))
+            );
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,32 +1,31 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Configuration;
 using ScratchMUD.Server.Commands;
 using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
 using System.Collections.Generic;
-using System.Data.SqlClient;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Hubs
 {
     public class EventHub : Hub
     {
-        private readonly IConfiguration configuration;
         private readonly PlayerContext playerContext;
+        private readonly ScratchMUDContext scratchMUDContext;
         private readonly IDictionary<string, ICommand> commandDictionary;
 
         public EventHub(
-            IConfiguration configuration,
             PlayerContext playerContext,
-            EditingState editingState
+            EditingState editingState,
+            ScratchMUDContext scratchMUDContext
         )
         {
-            this.configuration = configuration;
             this.playerContext = playerContext;
+            this.scratchMUDContext = scratchMUDContext;
             commandDictionary = new Dictionary<string, ICommand>
             {
-                [RoomEditCommand.NAME] = new RoomEditCommand(editingState, playerContext, configuration),
+                [RoomEditCommand.NAME] = new RoomEditCommand(editingState, playerContext, scratchMUDContext),
                 [SayCommand.NAME] = new SayCommand(playerContext)
             };
 
@@ -89,30 +88,9 @@ namespace ScratchMUD.Server.Hubs
 
         private void GetPlayerRoom()
         {
-            var connectionString = configuration.GetValue<string>("ConnectionStrings:ScratchMudServer");
+            var room = scratchMUDContext.RoomTranslation.First();
 
-            try
-            {
-                using (var connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-
-                    using (var command = new SqlCommand("SELECT TOP 1 FullDescription FROM ScratchMUD.dbo.RoomTranslation", connection))
-                    {
-                        using (var reader = command.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                Clients.Client(Context.ConnectionId).SendAsync("ReceiveRoomMessage", $"{reader.GetString(0)}");
-                            }
-                        }
-                    }
-                }
-            }
-            catch (SqlException ex)
-            {
-                Clients.Client(Context.ConnectionId).SendAsync("ReceiveRoomMessage", $"{ex.ToString()}");
-            }
+            Clients.Client(Context.ConnectionId).SendAsync("ReceiveRoomMessage", $"{room.FullDescription}");
         }
     }
 }
