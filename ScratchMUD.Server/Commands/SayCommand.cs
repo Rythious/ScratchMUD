@@ -8,16 +8,16 @@ namespace ScratchMUD.Server.Commands
     internal class SayCommand : ICommand
     {
         internal const string NAME = "say";
-        private readonly PlayerContext playerContext;
 
+        #region Syntax, Help, and Name
         public string Name { get; } = NAME;
 
-        internal SayCommand(PlayerContext playerContext)
-        {
-            this.playerContext = playerContext;
-        }
+        public string SyntaxHelp => "SAY <VALUE>";
 
-        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(params string[] parameters)
+        public string GeneralHelp => "Your character speaks to the other characters in the room.";
+        #endregion
+
+        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(PlayerContext playerContext, params string[] parameters)
         {
             var output = (CommunicationChannel.Self, string.Empty);
 
@@ -31,16 +31,6 @@ namespace ScratchMUD.Server.Commands
             }
 
             return Task.Run(() => new List<(CommunicationChannel, string)> { output });
-        }
-
-        public string SyntaxHelp()
-        {
-            return "SAY <VALUE>";
-        }
-
-        public string GeneralHelp()
-        {
-            return "Your character speaks to the other characters in the room.";
         }
     }
 }

@@ -9,13 +9,17 @@ namespace ScratchMUD.Server.UnitTests.Commands
 {
     public class SayCommandUnitTests
     {
+        private readonly SayCommand sayCommand;
+
+        public SayCommandUnitTests()
+        {
+            sayCommand = new SayCommand();
+        }
+
         [Fact(DisplayName = "Name => Returns Say")]
         public void NameReturnsSay()
         {
-            //Arrange
-            var sayCommand = new SayCommand(new PlayerContext());
-
-            //Act
+            //Arrange & Act
             var result = sayCommand.Name;
 
             //Assert
@@ -25,11 +29,8 @@ namespace ScratchMUD.Server.UnitTests.Commands
         [Fact(DisplayName = "SyntaxHelp => Returns a string that includes Say")]
         public void SyntaxHelpReturnsAStringThatIncludesSay()
         {
-            //Arrange
-            var sayCommand = new SayCommand(new PlayerContext());
-
-            //Act
-            var result = sayCommand.SyntaxHelp();
+            //Arrange & Act
+            var result = sayCommand.SyntaxHelp;
 
             //Assert
             Assert.IsAssignableFrom<string>(result);
@@ -39,11 +40,8 @@ namespace ScratchMUD.Server.UnitTests.Commands
         [Fact(DisplayName = "GeneralHelp => Returns a non-empty string")]
         public void GeneralHelpReturnsANonEmptyString()
         {
-            //Arrange
-            var sayCommand = new SayCommand(new PlayerContext());
-
-            //Act
-            var result = sayCommand.GeneralHelp();
+            //Arrange & Act
+            var result = sayCommand.GeneralHelp;
 
             //Assert
             Assert.IsAssignableFrom<string>(result);
@@ -53,13 +51,8 @@ namespace ScratchMUD.Server.UnitTests.Commands
         [Fact(DisplayName = "ExecuteAsync => When no parameters are sent in, a message to the player is returned indicating no words")]
         public async Task ExecuteAsyncWhenNoParametersAreSentInAMessageToThePlayerIsReturnedIndicatingNoWords()
         {
-            //Arrange
-            var playerContext = new PlayerContext();
-
-            var sayCommand = new SayCommand(playerContext);
-
-            //Act
-            var result = await sayCommand.ExecuteAsync();
+            //Arrange & Act
+            var result = await sayCommand.ExecuteAsync(new PlayerContext());
 
             //Assert
             Assert.NotNull(result);
@@ -78,14 +71,12 @@ namespace ScratchMUD.Server.UnitTests.Commands
             {
                 Name = "Trouble"
             };
-
-            var sayCommand = new SayCommand(playerContext);
-
+            
             var firstParameter = "one";
             var secondParameter = "two";
 
             //Act
-            var result = await sayCommand.ExecuteAsync(firstParameter, secondParameter);
+            var result = await sayCommand.ExecuteAsync(playerContext, firstParameter, secondParameter);
 
             //Assert
             Assert.NotNull(result);

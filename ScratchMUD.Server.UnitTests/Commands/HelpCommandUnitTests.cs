@@ -1,5 +1,6 @@
 using Moq;
 using ScratchMUD.Server.Commands;
+using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
 using System;
 using System.Collections.Generic;
@@ -30,7 +31,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var helpCommand = new HelpCommand(new Dictionary<string, ICommand>());
 
             //Act
-            var result = helpCommand.SyntaxHelp();
+            var result = helpCommand.SyntaxHelp;
 
             //Assert
             Assert.IsAssignableFrom<string>(result);
@@ -44,7 +45,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var helpCommand = new HelpCommand(new Dictionary<string, ICommand>());
 
             //Act
-            var result = helpCommand.GeneralHelp();
+            var result = helpCommand.GeneralHelp;
 
             //Assert
             Assert.IsAssignableFrom<string>(result);
@@ -69,7 +70,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var helpCommand = new HelpCommand(commandDictionary);
 
             //Act
-            var result = await helpCommand.ExecuteAsync();
+            var result = await helpCommand.ExecuteAsync(new PlayerContext());
 
             //Assert
             Assert.NotNull(result);
@@ -100,7 +101,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var helpCommand = new HelpCommand(commandDictionary);
 
             //Act
-            var result = await helpCommand.ExecuteAsync("not" + COMMAND1_NAME);
+            var result = await helpCommand.ExecuteAsync(new PlayerContext(), "not" + COMMAND1_NAME);
 
             //Assert
             Assert.NotNull(result);
@@ -119,8 +120,8 @@ namespace ScratchMUD.Server.UnitTests.Commands
 
             var mockHelpCommand = new Mock<ICommand>(MockBehavior.Strict);
 
-            mockHelpCommand.Setup(h => h.SyntaxHelp()).Returns("syntax statement");
-            mockHelpCommand.Setup(h => h.GeneralHelp()).Returns("help statement");
+            mockHelpCommand.Setup(h => h.SyntaxHelp).Returns("syntax statement");
+            mockHelpCommand.Setup(h => h.GeneralHelp).Returns("help statement");
 
             var commandDictionary = new Dictionary<string, ICommand>
             {
@@ -130,7 +131,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var helpCommand = new HelpCommand(commandDictionary);
 
             //Act
-            var result = await helpCommand.ExecuteAsync(COMMAND1_NAME);
+            var result = await helpCommand.ExecuteAsync(new PlayerContext(), COMMAND1_NAME);
 
             //Assert
             mockHelpCommand.VerifyAll();
@@ -153,7 +154,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var helpCommand = new HelpCommand(commandDictionary);
 
             //Act
-            var result = await helpCommand.ExecuteAsync("one", "two");
+            var result = await helpCommand.ExecuteAsync(new PlayerContext(), "one", "two");
 
             //Assert
             Assert.NotNull(result);

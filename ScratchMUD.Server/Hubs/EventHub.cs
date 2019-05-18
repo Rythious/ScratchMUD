@@ -1,36 +1,30 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Configuration;
 using ScratchMUD.Server.Commands;
 using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
+using ScratchMUD.Server.Repositories;
+using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Hubs
 {
     public class EventHub : Hub
     {
-        private readonly IConfiguration _configuration;
         private readonly PlayerContext playerContext;
-        private readonly IDictionary<string, ICommand> commandDictionary;
+        private readonly IRoomRepository roomRepository;
+        private readonly ICommandRepository commandRepository;
 
         public EventHub(
-            IConfiguration configuration,
             PlayerContext playerContext,
-            EditingState editingState
+            IRoomRepository roomRepository,
+            ICommandRepository commandRepository
         )
         {
-            _configuration = configuration;
             this.playerContext = playerContext;
-            commandDictionary = new Dictionary<string, ICommand>
-            {
-                [RoomEditCommand.NAME] = new RoomEditCommand(editingState, playerContext),
-                [SayCommand.NAME] = new SayCommand(playerContext)
-            };
-
-            commandDictionary[HelpCommand.NAME] = new HelpCommand(commandDictionary);
+            this.roomRepository = roomRepository;
+            this.commandRepository = commandRepository;
         }
 
         public override Task OnConnectedAsync()
@@ -58,21 +52,21 @@ namespace ScratchMUD.Server.Hubs
         {
             var command = CommandParser.SplitCommandFromParameters(message, out string[] parameters);
 
-            var outputMessages = new List<(CommunicationChannel CommChannel, string Message)>();
-
-            if (commandDictionary.ContainsKey(command))
+            try
             {
-                outputMessages = await commandDictionary[command].ExecuteAsync(parameters);
-            }
-            else
-            {
-                outputMessages.Add((CommunicationChannel.Self, $"'{command}' is not a valid command"));
-            }
+                var outputMessages = await commandRepository.ExecuteAsync(playerContext, command, parameters);
 
-            await SendMessagesToProperChannels(outputMessages);
+                await SendMessagesToProperChannels(outputMessages);
+            }
+            catch (ArgumentException ex)
+            {
+                var output = (CommunicationChannel.Self, $"{ex.Message}");
+
+                await SendMessagesToProperChannels(new List<(CommunicationChannel CommChannel, string Message)> { output });
+            }  
         }
 
-        private async Task SendMessagesToProperChannels(List<(CommunicationChannel CommChannel, string Message)> outputMessages)
+        private async Task SendMessagesToProperChannels(IEnumerable<(CommunicationChannel CommChannel, string Message)> outputMessages)
         {
             foreach (var outputItem in outputMessages)
             {
@@ -89,30 +83,9 @@ namespace ScratchMUD.Server.Hubs
 
         private void GetPlayerRoom()
         {
-            var connectionString = _configuration.GetValue<string>("ConnectionStrings:ScratchMudServer");
+            var roomDescription = roomRepository.GetRoomFullDescription(1);
 
-            try
-            {
-                using (var connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-
-                    using (var command = new SqlCommand("SELECT TOP 1 FullDescription FROM ScratchMUD.dbo.RoomTranslation", connection))
-                    {
-                        using (var reader = command.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                Clients.Client(Context.ConnectionId).SendAsync("ReceiveRoomMessage", $"{reader.GetString(0)}");
-                            }
-                        }
-                    }
-                }
-            }
-            catch (SqlException ex)
-            {
-                Clients.Client(Context.ConnectionId).SendAsync("ReceiveRoomMessage", $"{ex.ToString()}");
-            }
+            Clients.Client(Context.ConnectionId).SendAsync("ReceiveRoomMessage", $"{roomDescription}");
         }
     }
 }

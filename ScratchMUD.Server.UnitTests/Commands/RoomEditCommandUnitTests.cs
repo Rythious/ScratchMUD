@@ -1,8 +1,10 @@
-﻿using Moq;
+﻿using Microsoft.EntityFrameworkCore;
+using Moq;
 using ScratchMUD.Server.Commands;
 using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
+using ScratchMUD.Server.Repositories;
 using System;
 using System.Threading.Tasks;
 using Xunit;
@@ -11,13 +13,28 @@ namespace ScratchMUD.Server.UnitTests.Commands
 {
     public class RoomEditCommandUnitTests
     {
+        private readonly Mock<EditingState> mockEditingState;
+        private readonly Mock<IRoomRepository> mockRoomRepository;
+        private readonly PlayerContext playerContext;
+        private readonly RoomEditCommand roomEditCommand;
+
+        public RoomEditCommandUnitTests()
+        {
+            mockEditingState = new Mock<EditingState>(MockBehavior.Strict);
+            mockRoomRepository = new Mock<IRoomRepository>(MockBehavior.Strict);
+
+            playerContext = new PlayerContext
+            {
+                Name = "Tester Jones"
+            };
+
+            roomEditCommand = new RoomEditCommand(mockEditingState.Object, mockRoomRepository.Object);
+        }
+
         [Fact(DisplayName = "Name => Returns RoomEdit")]
         public void NameReturnsRoomEdit()
         {
-            //Arrange
-            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext());
-
-            //Act
+            //Arrange & Act
             var result = roomEditCommand.Name;
 
             //Assert
@@ -27,11 +44,8 @@ namespace ScratchMUD.Server.UnitTests.Commands
         [Fact(DisplayName = "SyntaxHelp => Returns a string that includes RoomEdit")]
         public void SyntaxHelpReturnsAStringThatIncludesRoomEdit()
         {
-            //Arrange
-            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext());
-
-            //Act
-            var result = roomEditCommand.SyntaxHelp();
+            //Arrange & Act
+            var result = roomEditCommand.SyntaxHelp;
 
             //Assert
             Assert.IsAssignableFrom<string>(result);
@@ -41,11 +55,8 @@ namespace ScratchMUD.Server.UnitTests.Commands
         [Fact(DisplayName = "GeneralHelp => Returns a non-empty string")]
         public void GeneralHelpReturnsANonEmptyString()
         {
-            //Arrange
-            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext());
-
-            //Act
-            var result = roomEditCommand.GeneralHelp();
+            //Arrange & Act
+            var result = roomEditCommand.GeneralHelp;
 
             //Assert
             Assert.IsAssignableFrom<string>(result);
@@ -56,22 +67,13 @@ namespace ScratchMUD.Server.UnitTests.Commands
         public async Task ExecuteAsyncWhenPassedNoParametersAndThePlayerIsNotCurrentlyEditingTheyArePutInEditingStateWithAMessage()
         {
             //Arrange
-            var playerContext = new PlayerContext
-            {
-                Name = "Rodrigo"
-            };
-
-            var mockEditingState = new Mock<EditingState>(MockBehavior.Strict);
-
             EditType? editType = null;
             mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(playerContext.Name, out editType)).Returns(false);
 
             mockEditingState.Setup(es => es.AddPlayerEditor(playerContext.Name, EditType.Room)).Verifiable();
 
-            var roomEditCommand = new RoomEditCommand(mockEditingState.Object, playerContext);
-
             //Act
-            var result = await roomEditCommand.ExecuteAsync();
+            var result = await roomEditCommand.ExecuteAsync(playerContext);
 
             //Assert
             mockEditingState.VerifyAll();
@@ -87,20 +89,11 @@ namespace ScratchMUD.Server.UnitTests.Commands
         public async Task ExecuteAsyncWhenPassedNoParametersAndThePlayerIsAlreadyEditingAMessageIsReturnedStatingTheyAreAlreadyEditing()
         {
             //Arrange
-            var playerContext = new PlayerContext
-            {
-                Name = "Estavo"
-            };
-
-            var mockEditingState = new Mock<EditingState>(MockBehavior.Strict);
-
             EditType? editType = EditType.Room;
             mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(playerContext.Name, out editType)).Returns(true);
 
-            var roomEditCommand = new RoomEditCommand(mockEditingState.Object, playerContext);
-
             //Act
-            var result = await roomEditCommand.ExecuteAsync();
+            var result = await roomEditCommand.ExecuteAsync(playerContext);
 
             //Assert
             mockEditingState.VerifyAll();
@@ -116,19 +109,10 @@ namespace ScratchMUD.Server.UnitTests.Commands
         public async Task ExecuteAsyncWhenPassedOneExitParameterEditingStateIsCalledToRemoveThePlayerAndAMessageIsReturned()
         {
             //Arrange
-            var playerContext = new PlayerContext
-            {
-                Name = "Chimmy"
-            };
-
-            var mockEditingState = new Mock<EditingState>(MockBehavior.Strict);
-
             mockEditingState.Setup(es => es.RemovePlayerEditor(playerContext.Name)).Verifiable();
 
-            var roomEditCommand = new RoomEditCommand(mockEditingState.Object, playerContext);
-
             //Act
-            var result = await roomEditCommand.ExecuteAsync("exit");
+            var result = await roomEditCommand.ExecuteAsync(playerContext, "exit");
 
             //Assert
             mockEditingState.VerifyAll();
@@ -143,11 +127,8 @@ namespace ScratchMUD.Server.UnitTests.Commands
         [Fact(DisplayName = "ExecuteAsync => When passed one parameter that does not match a handled case, an error message is returned")]
         public async Task ExecuteAsyncWhenPassedOneParameterThatDoesNotMatchAHandledCaseAnErrorMessageIsReturned()
         {
-            //Arrange
-            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext());
-
-            //Act
-            var result = await roomEditCommand.ExecuteAsync("purple");
+            //Arrange & Act
+            var result = await roomEditCommand.ExecuteAsync(playerContext, "purple");
 
             //Assert
             Assert.NotNull(result);
@@ -158,14 +139,11 @@ namespace ScratchMUD.Server.UnitTests.Commands
             Assert.Contains("invalid syntax", result[0].Item2, StringComparison.OrdinalIgnoreCase);
         }
 
-        [Fact(DisplayName = "ExecuteAsync => When passed more than one parameter, an error message is returned")]
-        public async Task ExecuteAsyncWhenPassedMoreThanOneParameterAnErrorMessageIsReturned()
+        [Fact(DisplayName = "ExecuteAsync => When passed more than one parameter and the first is not a valid action, an error message is returned")]
+        public async Task ExecuteAsyncWhenPassedMoreThanOneParameterAndTheFirstIsNotAValidActionAnErrorMessageIsReturned()
         {
-            //Arrange
-            var roomEditCommand = new RoomEditCommand(new EditingState(), new PlayerContext());
-
-            //Act
-            var result = await roomEditCommand.ExecuteAsync("one", "two");
+            //Arrange & Act
+            var result = await roomEditCommand.ExecuteAsync(playerContext, "one", "two");
 
             //Assert
             Assert.NotNull(result);
@@ -174,6 +152,130 @@ namespace ScratchMUD.Server.UnitTests.Commands
             Assert.Equal(CommunicationChannel.Self, result[0].Item1);
             Assert.IsAssignableFrom<string>(result[0].Item2);
             Assert.Contains("invalid syntax", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact(DisplayName = "ExecuteAsync => When passed more than one parameter and the first is a valid action but the player is not editing, an error message is returned")]
+        public async Task ExecuteAsyncWhenPassedMoreThanOneParameterAndTheFirstIsAValidActionButThePlayerIsNotEditingAnErrorMessageIsReturned()
+        {
+            //Arrange
+            EditType? editType = EditType.Room;
+            mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(playerContext.Name, out editType)).Returns(false);
+
+            //Act
+            var result = await roomEditCommand.ExecuteAsync(playerContext, "title", "two");
+
+            //Assert
+            mockEditingState.VerifyAll();
+            Assert.NotNull(result);
+            Assert.True(result.Count == 1);
+            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
+            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
+            Assert.IsAssignableFrom<string>(result[0].Item2);
+            Assert.Contains("room edit mode", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact(DisplayName = "ExecuteAsync => When passed more than one parameter and the first is a title action the correct room repository method is called with the correct value")]
+        public async Task ExecuteAsyncWhenPassedMoreThanOneParameterAndTheFirstIsATitleActionTheCorrectRoomRepositoryMethodIsCalledWithTheCorrectValue()
+        {
+            //Arrange
+            EditType? editType = EditType.Room;
+            mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(playerContext.Name, out editType)).Returns(true);
+
+            string[] testParameters = new string[3] { "title", "new", "string" };
+
+            mockRoomRepository.Setup(r => r.UpdateTitle(It.Is<string>(s => s == string.Join(" ", testParameters[1], testParameters[2]))))
+                .Returns(Task.CompletedTask);
+
+            //Act
+            var result = await roomEditCommand.ExecuteAsync(playerContext, testParameters);
+
+            //Assert
+            mockEditingState.VerifyAll();
+            mockRoomRepository.VerifyAll();
+            Assert.NotNull(result);
+            Assert.True(result.Count == 1);
+            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
+            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
+            Assert.IsAssignableFrom<string>(result[0].Item2);
+            Assert.Contains("room updated", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact(DisplayName = "ExecuteAsync => When passed more than one parameter and the first is a short description action the correct room repository method is called with the correct value")]
+        public async Task ExecuteAsyncWhenPassedMoreThanOneParameterAndTheFirstIsAShortDescriptionActionTheCorrectRoomRepositoryMethodIsCalledWithTheCorrectValue()
+        {
+            //Arrange
+            EditType? editType = EditType.Room;
+            mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(playerContext.Name, out editType)).Returns(true);
+
+            string[] testParameters = new string[3] { "short-description", "new", "string" };
+
+            mockRoomRepository.Setup(r => r.UpdateShortDescription(It.Is<string>(s => s == string.Join(" ", testParameters[1], testParameters[2]))))
+                .Returns(Task.CompletedTask);
+
+            //Act
+            var result = await roomEditCommand.ExecuteAsync(playerContext, testParameters);
+
+            //Assert
+            mockEditingState.VerifyAll();
+            mockRoomRepository.VerifyAll();
+            Assert.NotNull(result);
+            Assert.True(result.Count == 1);
+            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
+            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
+            Assert.IsAssignableFrom<string>(result[0].Item2);
+            Assert.Contains("room updated", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact(DisplayName = "ExecuteAsync => When passed more than one parameter and the first is a full description action the correct room repository method is called with the correct value")]
+        public async Task ExecuteAsyncWhenPassedMoreThanOneParameterAndTheFirstIsAFullDescriptionActionTheCorrectRoomRepositoryMethodIsCalledWithTheCorrectValue()
+        {
+            //Arrange
+            EditType? editType = EditType.Room;
+            mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(playerContext.Name, out editType)).Returns(true);
+
+            string[] testParameters = new string[3] { "full-description", "new", "string" };
+
+            mockRoomRepository.Setup(r => r.UpdateFullDescription(It.Is<string>(s => s == string.Join(" ", testParameters[1], testParameters[2]))))
+                .Returns(Task.CompletedTask);
+
+            //Act
+            var result = await roomEditCommand.ExecuteAsync(playerContext, testParameters);
+
+            //Assert
+            mockEditingState.VerifyAll();
+            mockRoomRepository.VerifyAll();
+            Assert.NotNull(result);
+            Assert.True(result.Count == 1);
+            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
+            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
+            Assert.IsAssignableFrom<string>(result[0].Item2);
+            Assert.Contains("room updated", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact(DisplayName = "ExecuteAsync => When passed more than one parameter and the room repository is called for an update but throws an exception, an error is returned with that exception text")]
+        public async Task ExecuteAsyncWhenPassedMoreThanOneParameterAndRoomRepositoryIsCalledForAnUpdateButThrowsAnExceptionAnErrorMessageIsReturnedWithThatExceptionText()
+        {
+            //Arrange
+            EditType? editType = EditType.Room;
+            mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(playerContext.Name, out editType)).Returns(true);
+
+            string[] testParameters = new string[3] { "full-description", "new", "string" };
+
+            mockRoomRepository.Setup(r => r.UpdateFullDescription(It.Is<string>(s => s == string.Join(" ", testParameters[1], testParameters[2]))))
+                .Throws(new DbUpdateException("thrown from database", (Exception)null));
+
+            //Act
+            var result = await roomEditCommand.ExecuteAsync(playerContext, testParameters);
+
+            //Assert
+            mockEditingState.VerifyAll();
+            mockRoomRepository.VerifyAll();
+            Assert.NotNull(result);
+            Assert.True(result.Count == 1);
+            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
+            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
+            Assert.IsAssignableFrom<string>(result[0].Item2);
+            Assert.Contains("exception", result[0].Item2, StringComparison.OrdinalIgnoreCase);
         }
     }
 }
