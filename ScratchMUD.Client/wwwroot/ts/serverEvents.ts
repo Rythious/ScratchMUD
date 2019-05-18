@@ -29,8 +29,11 @@ connection.start().catch(err => console.error(err.toString()));
 
 // Enable the UI that relies on a connected SignalR hub.  These items should really be conditional based on a success though...
 userCommandTextField.disabled = false;
+userCommandTextField.focus();
 
 enableSendUserCommandButton();
+
+addClickEventToOutputWindowToFocusOnCommandTextField();
 
 function buildMudOutputItemWithMessage(message: string) {
     var outputItem = document.createElement("li");
@@ -60,6 +63,12 @@ function enableSendUserCommandButton() {
     });
 
     sendUserCommandButton.disabled = false;
+}
+
+function addClickEventToOutputWindowToFocusOnCommandTextField() {
+    mudOutputWindow.addEventListener("click", function (event) {
+        userCommandTextField.focus();
+    });
 }
 
 function sendClientMessage(message: string) {
