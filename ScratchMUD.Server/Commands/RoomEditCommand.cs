@@ -15,17 +15,14 @@ namespace ScratchMUD.Server.Commands
         internal const string NAME = "roomedit";
         private readonly string[] VALID_ACTIONS = new string[3] { "title", "short-description", "full-description" };
         private readonly EditingState editingState;
-        private readonly PlayerContext playerContext;
         private readonly IRoomRepository roomRepository;
 
         internal RoomEditCommand(
             EditingState editingState,
-            PlayerContext playerContext,
             IRoomRepository roomRepository
         )
         {
             this.editingState = editingState;
-            this.playerContext = playerContext;
             this.roomRepository = roomRepository;
         }
 
@@ -37,24 +34,24 @@ namespace ScratchMUD.Server.Commands
         public string SyntaxHelp => "ROOMEDIT or ROOMEDIT EXIT, ROOMEDIT TITLE <VALUE>, ROOMEDIT SHORT-DESCRIPTION <VALUE>, ROOMEDIT FULL-DESCRIPTION <VALUE>";
         #endregion
 
-        public async Task<List<(CommunicationChannel, string)>> ExecuteAsync(params string[] parameters)
+        public async Task<List<(CommunicationChannel, string)>> ExecuteAsync(PlayerContext playerContext, params string[] parameters)
         {
             var output = new List<(CommunicationChannel, string)>();
 
             if (parameters.Length == 0)
             {
-                output.Add((CommunicationChannel.Self, EnterEditingModeWithResponse()));
+                output.Add((CommunicationChannel.Self, EnterEditingModeWithResponse(playerContext)));
             }
             else if (parameters.Length == 1)
             {
                 if (parameters[0].ToLower() == "exit")
                 {
-                    output.Add((CommunicationChannel.Self, ExitEditingModeWithResponse()));
+                    output.Add((CommunicationChannel.Self, ExitEditingModeWithResponse(playerContext)));
                 }
             }
             else //parameters.Length > 1
             {
-                var response = await UpdateRoomDetailWithResponse(parameters);
+                var response = await UpdateRoomDetailWithResponse(playerContext, parameters);
 
                 if (!string.IsNullOrEmpty(response))
                 {
@@ -70,7 +67,7 @@ namespace ScratchMUD.Server.Commands
             return output;
         }
 
-        private async Task<string> UpdateRoomDetailWithResponse(string[] parameters)
+        private async Task<string> UpdateRoomDetailWithResponse(PlayerContext playerContext, string[] parameters)
         {
             if (VALID_ACTIONS.Contains(parameters[0].ToLower()))
             {
@@ -111,7 +108,7 @@ namespace ScratchMUD.Server.Commands
             return null;
         }
 
-        private string EnterEditingModeWithResponse()
+        private string EnterEditingModeWithResponse(PlayerContext playerContext)
         {
             //TODO: See if the current player is listed as an editor for the current area.
 
@@ -127,7 +124,7 @@ namespace ScratchMUD.Server.Commands
             }
         }
 
-        private string ExitEditingModeWithResponse()
+        private string ExitEditingModeWithResponse(PlayerContext playerContext)
         {
             editingState.RemovePlayerEditor(playerContext.Name);
 

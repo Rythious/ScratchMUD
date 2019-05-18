@@ -28,7 +28,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
                 Name = "Tester Jones"
             };
 
-            roomEditCommand = new RoomEditCommand(mockEditingState.Object, playerContext, mockRoomRepository.Object);
+            roomEditCommand = new RoomEditCommand(mockEditingState.Object, mockRoomRepository.Object);
         }
 
         [Fact(DisplayName = "Name => Returns RoomEdit")]
@@ -73,7 +73,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             mockEditingState.Setup(es => es.AddPlayerEditor(playerContext.Name, EditType.Room)).Verifiable();
 
             //Act
-            var result = await roomEditCommand.ExecuteAsync();
+            var result = await roomEditCommand.ExecuteAsync(playerContext);
 
             //Assert
             mockEditingState.VerifyAll();
@@ -93,7 +93,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(playerContext.Name, out editType)).Returns(true);
 
             //Act
-            var result = await roomEditCommand.ExecuteAsync();
+            var result = await roomEditCommand.ExecuteAsync(playerContext);
 
             //Assert
             mockEditingState.VerifyAll();
@@ -112,7 +112,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             mockEditingState.Setup(es => es.RemovePlayerEditor(playerContext.Name)).Verifiable();
 
             //Act
-            var result = await roomEditCommand.ExecuteAsync("exit");
+            var result = await roomEditCommand.ExecuteAsync(playerContext, "exit");
 
             //Assert
             mockEditingState.VerifyAll();
@@ -128,7 +128,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
         public async Task ExecuteAsyncWhenPassedOneParameterThatDoesNotMatchAHandledCaseAnErrorMessageIsReturned()
         {
             //Arrange & Act
-            var result = await roomEditCommand.ExecuteAsync("purple");
+            var result = await roomEditCommand.ExecuteAsync(playerContext, "purple");
 
             //Assert
             Assert.NotNull(result);
@@ -143,7 +143,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
         public async Task ExecuteAsyncWhenPassedMoreThanOneParameterAndTheFirstIsNotAValidActionAnErrorMessageIsReturned()
         {
             //Arrange & Act
-            var result = await roomEditCommand.ExecuteAsync("one", "two");
+            var result = await roomEditCommand.ExecuteAsync(playerContext, "one", "two");
 
             //Assert
             Assert.NotNull(result);
@@ -162,7 +162,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(playerContext.Name, out editType)).Returns(false);
 
             //Act
-            var result = await roomEditCommand.ExecuteAsync("title", "two");
+            var result = await roomEditCommand.ExecuteAsync(playerContext, "title", "two");
 
             //Assert
             mockEditingState.VerifyAll();
@@ -187,7 +187,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
                 .Returns(Task.CompletedTask);
 
             //Act
-            var result = await roomEditCommand.ExecuteAsync(testParameters);
+            var result = await roomEditCommand.ExecuteAsync(playerContext, testParameters);
 
             //Assert
             mockEditingState.VerifyAll();
@@ -213,7 +213,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
                 .Returns(Task.CompletedTask);
 
             //Act
-            var result = await roomEditCommand.ExecuteAsync(testParameters);
+            var result = await roomEditCommand.ExecuteAsync(playerContext, testParameters);
 
             //Assert
             mockEditingState.VerifyAll();
@@ -239,7 +239,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
                 .Returns(Task.CompletedTask);
 
             //Act
-            var result = await roomEditCommand.ExecuteAsync(testParameters);
+            var result = await roomEditCommand.ExecuteAsync(playerContext, testParameters);
 
             //Assert
             mockEditingState.VerifyAll();
@@ -265,7 +265,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
                 .Throws(new DbUpdateException("thrown from database", (Exception)null));
 
             //Act
-            var result = await roomEditCommand.ExecuteAsync(testParameters);
+            var result = await roomEditCommand.ExecuteAsync(playerContext, testParameters);
 
             //Assert
             mockEditingState.VerifyAll();

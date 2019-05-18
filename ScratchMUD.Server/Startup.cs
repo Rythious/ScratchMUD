@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ScratchMUD.Server.Commands;
 using ScratchMUD.Server.HostedServices;
 using ScratchMUD.Server.Hubs;
 using ScratchMUD.Server.Infrastructure;
@@ -32,8 +33,9 @@ namespace ScratchMUD.Server
             });
             services.AddHostedService<ServerTimeHostedService>();
             services.AddTransient<PlayerContext>();
-            services.AddSingleton<EditingState>();
+            services.AddScoped<ICommandRepository, CommandRepository>();
             services.AddScoped<IRoomRepository, RoomRepository>();
+            services.AddSingleton<EditingState>();
             services.AddDbContext<ScratchMUDContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("ScratchMudServer"))
             );

@@ -1,4 +1,5 @@
-﻿using ScratchMUD.Server.Models.Constants;
+﻿using ScratchMUD.Server.Models;
+using ScratchMUD.Server.Models.Constants;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,7 +24,7 @@ namespace ScratchMUD.Server.Commands
         public string GeneralHelp => "Returns helpful information about available commands.";
         #endregion
 
-        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(params string[] parameters)
+        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(PlayerContext playerContext, params string[] parameters)
         {
             var output = new List<(CommunicationChannel, string)>();
 

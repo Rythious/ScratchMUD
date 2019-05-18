@@ -4,6 +4,7 @@ using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
 using ScratchMUD.Server.Repositories;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -13,23 +14,17 @@ namespace ScratchMUD.Server.Hubs
     {
         private readonly PlayerContext playerContext;
         private readonly IRoomRepository roomRepository;
-        private readonly IDictionary<string, ICommand> commandDictionary;
+        private readonly ICommandRepository commandRepository;
 
         public EventHub(
             PlayerContext playerContext,
-            EditingState editingState,
-            IRoomRepository roomRepository
+            IRoomRepository roomRepository,
+            ICommandRepository commandRepository
         )
         {
             this.playerContext = playerContext;
             this.roomRepository = roomRepository;
-            commandDictionary = new Dictionary<string, ICommand>
-            {
-                [RoomEditCommand.NAME] = new RoomEditCommand(editingState, playerContext, roomRepository),
-                [SayCommand.NAME] = new SayCommand(playerContext)
-            };
-
-            commandDictionary[HelpCommand.NAME] = new HelpCommand(commandDictionary);
+            this.commandRepository = commandRepository;
         }
 
         public override Task OnConnectedAsync()
@@ -57,21 +52,21 @@ namespace ScratchMUD.Server.Hubs
         {
             var command = CommandParser.SplitCommandFromParameters(message, out string[] parameters);
 
-            var outputMessages = new List<(CommunicationChannel CommChannel, string Message)>();
-
-            if (commandDictionary.ContainsKey(command))
+            try
             {
-                outputMessages = await commandDictionary[command].ExecuteAsync(parameters);
-            }
-            else
-            {
-                outputMessages.Add((CommunicationChannel.Self, $"'{command}' is not a valid command"));
-            }
+                var outputMessages = await commandRepository.ExecuteAsync(playerContext, command, parameters);
 
-            await SendMessagesToProperChannels(outputMessages);
+                await SendMessagesToProperChannels(outputMessages);
+            }
+            catch (ArgumentException ex)
+            {
+                var output = (CommunicationChannel.Self, $"{ex.Message}");
+
+                await SendMessagesToProperChannels(new List<(CommunicationChannel CommChannel, string Message)> { output });
+            }  
         }
 
-        private async Task SendMessagesToProperChannels(List<(CommunicationChannel CommChannel, string Message)> outputMessages)
+        private async Task SendMessagesToProperChannels(IEnumerable<(CommunicationChannel CommChannel, string Message)> outputMessages)
         {
             foreach (var outputItem in outputMessages)
             {
