@@ -25,7 +25,9 @@ connection.on("ReceiveRoomMessage", function (message) {
 connection.start().catch(function (err) { return console.error(err.toString()); });
 // Enable the UI that relies on a connected SignalR hub.  These items should really be conditional based on a success though...
 userCommandTextField.disabled = false;
+userCommandTextField.focus();
 enableSendUserCommandButton();
+addClickEventToOutputWindowToFocusOnCommandTextField();
 function buildMudOutputItemWithMessage(message) {
     var outputItem = document.createElement("li");
     var newTextNode = document.createTextNode(message);
@@ -48,6 +50,11 @@ function enableSendUserCommandButton() {
         event.preventDefault();
     });
     sendUserCommandButton.disabled = false;
+}
+function addClickEventToOutputWindowToFocusOnCommandTextField() {
+    mudOutputWindow.addEventListener("click", function (event) {
+        userCommandTextField.focus();
+    });
 }
 function sendClientMessage(message) {
     connection.invoke("RelayClientMessage", message).catch(function (err) {
