@@ -13,7 +13,7 @@ namespace ScratchMUD.Server.Commands
     public class RoomEditCommand : ICommand
     {
         internal const string NAME = "roomedit";
-        private readonly string[] VALID_ACTIONS = new string[3] { "title", "short-description", "full-description" };
+        private readonly string[] VALID_ACTIONS = new string[4] { "title", "short-description", "full-description", "create-north" };
         private readonly EditingState editingState;
         private readonly IRoomRepository roomRepository;
 
@@ -31,7 +31,7 @@ namespace ScratchMUD.Server.Commands
 
         public string GeneralHelp => "If the user has sufficient editing permissions for the current area, they will enter editing mode of their current room.  The Exit subcommand will exit this mode.";
 
-        public string SyntaxHelp => "ROOMEDIT or ROOMEDIT EXIT, ROOMEDIT TITLE <VALUE>, ROOMEDIT SHORT-DESCRIPTION <VALUE>, ROOMEDIT FULL-DESCRIPTION <VALUE>";
+        public string SyntaxHelp => "ROOMEDIT or ROOMEDIT EXIT, ROOMEDIT TITLE <VALUE>, ROOMEDIT SHORT-DESCRIPTION <VALUE>, ROOMEDIT FULL-DESCRIPTION <VALUE>, ROOMEDIT CREATE-NORTH";
         #endregion
 
         public async Task<List<(CommunicationChannel, string)>> ExecuteAsync(PlayerContext playerContext, params string[] parameters)
@@ -47,6 +47,12 @@ namespace ScratchMUD.Server.Commands
                 if (parameters[0].ToLower() == "exit")
                 {
                     output.Add((CommunicationChannel.Self, ExitEditingModeWithResponse(playerContext)));
+                }
+
+                if (parameters[0].ToLower() == "create-north")
+                {
+                    await roomRepository.CreateNorthRoom(playerContext.CurrentRoomId);
+                    output.Add((CommunicationChannel.Self, "Room updated."));
                 }
             }
             else //parameters.Length > 1
@@ -84,13 +90,13 @@ namespace ScratchMUD.Server.Commands
                         switch (parameters[0].ToLower())
                         {
                             case "title":
-                                await roomRepository.UpdateTitle(valuePortionOfCommand);
+                                await roomRepository.UpdateTitle(playerContext.CurrentRoomId, valuePortionOfCommand);
                                 break;
                             case "short-description":
-                                await roomRepository.UpdateShortDescription(valuePortionOfCommand);
+                                await roomRepository.UpdateShortDescription(playerContext.CurrentRoomId, valuePortionOfCommand);
                                 break;
                             case "full-description":
-                                await roomRepository.UpdateFullDescription(valuePortionOfCommand);
+                                await roomRepository.UpdateFullDescription(playerContext.CurrentRoomId, valuePortionOfCommand);
                                 break;
                             default:
                                 break;

@@ -44,6 +44,7 @@ namespace ScratchMUD.Server.Hubs
         public async Task RelayClientMessage(string message)
         {
             playerContext.Name = Context.ConnectionId;
+            playerContext.CurrentRoomId = 1;
 
             await ExecuteClientCommand(message);
         }

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace ScratchMUD.Server.Models
 {
@@ -294,7 +294,7 @@ namespace ScratchMUD.Server.Models
                     .HasConstraintName("FK_Room_Area");
 
                 entity.HasOne(d => d.CreatedByPlayer)
-                    .WithMany(p => p.Room)
+                    .WithMany(p => p.RoomNavigation)
                     .HasForeignKey(d => d.CreatedByPlayerId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Room_PlayerCharacter");
