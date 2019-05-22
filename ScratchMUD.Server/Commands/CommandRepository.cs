@@ -20,7 +20,8 @@ namespace ScratchMUD.Server.Commands
             CommandDictionary = new Dictionary<string, ICommand>
             {
                 [RoomEditCommand.NAME] = new RoomEditCommand(editingState, roomRepository),
-                [SayCommand.NAME] = new SayCommand()
+                [SayCommand.NAME] = new SayCommand(),
+                [LookCommand.NAME] = new LookCommand(roomRepository)
             };
 
             CommandDictionary[HelpCommand.NAME] = new HelpCommand(CommandDictionary);

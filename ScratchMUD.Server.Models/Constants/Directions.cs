@@ -1,4 +1,4 @@
-﻿namespace ScratchMUD.Server.Constants
+﻿namespace ScratchMUD.Server.Models.Constants
 {
     public enum Directions
     {

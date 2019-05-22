@@ -1,6 +1,7 @@
-﻿using ScratchMUD.Server.Constants;
-using ScratchMUD.Server.Models;
+﻿using ScratchMUD.Server.EntityFramework;
+using ScratchMUD.Server.Models.Constants;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -18,6 +19,60 @@ namespace ScratchMUD.Server.Repositories
         public string GetRoomFullDescription(int roomId)
         {
             return context.RoomTranslation.Single(rt => rt.RoomId == roomId).FullDescription;
+        }
+
+        public Models.Room GetRoomWithTranslatedValues(int roomId)
+        {
+            var room = context.Room.Single(r => r.RoomId == roomId);
+            var roomTranslation = context.RoomTranslation.Single(rt => rt.LanguageId == 1 && rt.RoomId == roomId);
+            var authoringPlayerCharacter = context.PlayerCharacter.Single(pc => pc.PlayerCharacterId == room.CreatedByPlayerId);
+
+            return new Models.Room
+            {
+                FullDescription = roomTranslation.FullDescription,
+                ShortDescription = roomTranslation.ShortDescription,
+                Id = roomId,
+                Exits = BuildExitsHashSetFromRoomData(room),
+                Author = authoringPlayerCharacter.Name,
+                Title = roomTranslation.Title
+            };
+        }
+
+        private HashSet<(Directions, int)> BuildExitsHashSetFromRoomData(Room room)
+        {
+            var exits = new HashSet<(Directions, int)>();
+
+            if (room.NorthRoom.HasValue)
+            {
+                exits.Add((Directions.North, room.NorthRoom.Value));
+            }
+
+            if (room.EastRoom.HasValue)
+            {
+                exits.Add((Directions.East, room.EastRoom.Value));
+            }
+
+            if (room.SouthRoom.HasValue)
+            {
+                exits.Add((Directions.South, room.SouthRoom.Value));
+            }
+
+            if (room.WestRoom.HasValue)
+            {
+                exits.Add((Directions.West, room.WestRoom.Value));
+            }
+
+            if (room.UpRoom.HasValue)
+            {
+                exits.Add((Directions.Up, room.UpRoom.Value));
+            }
+
+            if (room.DownRoom.HasValue)
+            {
+                exits.Add((Directions.Down, room.DownRoom.Value));
+            }
+
+            return exits;
         }
 
         public async Task UpdateTitle(int roomId, string title)

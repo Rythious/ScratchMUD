@@ -183,7 +183,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
 
             string[] testParameters = new string[3] { "title", "new", "string" };
 
-            mockRoomRepository.Setup(r => r.UpdateTitle(It.Is<string>(s => s == string.Join(" ", testParameters[1], testParameters[2]))))
+            mockRoomRepository.Setup(r => r.UpdateTitle(It.IsAny<int>(), It.Is<string>(s => s == string.Join(" ", testParameters[1], testParameters[2]))))
                 .Returns(Task.CompletedTask);
 
             //Act
@@ -209,7 +209,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
 
             string[] testParameters = new string[3] { "short-description", "new", "string" };
 
-            mockRoomRepository.Setup(r => r.UpdateShortDescription(It.Is<string>(s => s == string.Join(" ", testParameters[1], testParameters[2]))))
+            mockRoomRepository.Setup(r => r.UpdateShortDescription(It.IsAny<int>(), It.Is<string>(s => s == string.Join(" ", testParameters[1], testParameters[2]))))
                 .Returns(Task.CompletedTask);
 
             //Act
@@ -235,7 +235,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
 
             string[] testParameters = new string[3] { "full-description", "new", "string" };
 
-            mockRoomRepository.Setup(r => r.UpdateFullDescription(It.Is<string>(s => s == string.Join(" ", testParameters[1], testParameters[2]))))
+            mockRoomRepository.Setup(r => r.UpdateFullDescription(It.IsAny<int>(), It.Is<string>(s => s == string.Join(" ", testParameters[1], testParameters[2]))))
                 .Returns(Task.CompletedTask);
 
             //Act
@@ -261,7 +261,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
 
             string[] testParameters = new string[3] { "full-description", "new", "string" };
 
-            mockRoomRepository.Setup(r => r.UpdateFullDescription(It.Is<string>(s => s == string.Join(" ", testParameters[1], testParameters[2]))))
+            mockRoomRepository.Setup(r => r.UpdateFullDescription(It.IsAny<int>(), It.Is<string>(s => s == string.Join(" ", testParameters[1], testParameters[2]))))
                 .Throws(new DbUpdateException("thrown from database", (Exception)null));
 
             //Act

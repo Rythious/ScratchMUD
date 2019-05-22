@@ -3,7 +3,6 @@ using ScratchMUD.Server.Commands;
 using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
-using ScratchMUD.Server.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,24 +12,25 @@ namespace ScratchMUD.Server.Hubs
     public class EventHub : Hub
     {
         private readonly PlayerContext playerContext;
-        private readonly IRoomRepository roomRepository;
         private readonly ICommandRepository commandRepository;
 
         public EventHub(
             PlayerContext playerContext,
-            IRoomRepository roomRepository,
             ICommandRepository commandRepository
         )
         {
             this.playerContext = playerContext;
-            this.roomRepository = roomRepository;
             this.commandRepository = commandRepository;
         }
 
         public override Task OnConnectedAsync()
         {
             Task.Run(() => SendMessage($"A new client has connected on {Context.ConnectionId}."));
-            GetPlayerRoom();
+
+            playerContext.Name = Context.ConnectionId;
+            playerContext.CurrentRoomId = 1;
+
+            ExecuteClientCommand(LookCommand.NAME).GetAwaiter().GetResult();
 
             return base.OnConnectedAsync();
         }
@@ -53,40 +53,48 @@ namespace ScratchMUD.Server.Hubs
         {
             var command = CommandParser.SplitCommandFromParameters(message, out string[] parameters);
 
+            string overrideClientReturnMethod = null;
+
+            //TODO: I need a way for commands to return their own style.
+            if (command == LookCommand.NAME)
+            {
+                overrideClientReturnMethod = "ReceiveRoomMessage";
+            }
+
             try
             {
                 var outputMessages = await commandRepository.ExecuteAsync(playerContext, command, parameters);
 
-                await SendMessagesToProperChannels(outputMessages);
+                if (string.IsNullOrEmpty(overrideClientReturnMethod))
+                {
+                    await SendMessagesToProperChannels(outputMessages);
+                }
+                else
+                {
+                    await SendMessagesToProperChannels(outputMessages, overrideClientReturnMethod);
+                }
             }
             catch (ArgumentException ex)
             {
                 var output = (CommunicationChannel.Self, $"{ex.Message}");
 
                 await SendMessagesToProperChannels(new List<(CommunicationChannel CommChannel, string Message)> { output });
-            }  
+            }
         }
 
-        private async Task SendMessagesToProperChannels(IEnumerable<(CommunicationChannel CommChannel, string Message)> outputMessages)
+        private async Task SendMessagesToProperChannels(IEnumerable<(CommunicationChannel CommChannel, string Message)> outputMessages, string clientReturnMethod = "ReceiveServerCreatedMessage")
         {
             foreach (var outputItem in outputMessages)
             {
                 if (outputItem.CommChannel == CommunicationChannel.Self)
                 {
-                    await Clients.Client(Context.ConnectionId).SendAsync("ReceiveServerCreatedMessage", outputItem.Message);
+                    await Clients.Client(Context.ConnectionId).SendAsync(clientReturnMethod, outputItem.Message);
                 }
                 else if (outputItem.CommChannel == CommunicationChannel.Everyone)
                 {
-                    await Clients.All.SendAsync("ReceiveServerCreatedMessage", outputItem.Message);
+                    await Clients.All.SendAsync(clientReturnMethod, outputItem.Message);
                 }
             }
-        }
-
-        private void GetPlayerRoom()
-        {
-            var roomDescription = roomRepository.GetRoomFullDescription(1);
-
-            Clients.Client(Context.ConnectionId).SendAsync("ReceiveRoomMessage", $"{roomDescription}");
         }
     }
 }

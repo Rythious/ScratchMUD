@@ -9,7 +9,6 @@ namespace ScratchMUD.Server.UnitTests.Hubs
     public class EventHubUnitTests
     {
         private readonly PlayerContext playerContext;
-        private readonly Mock<IRoomRepository> mockRoomRepositiory;
         private readonly Mock<ICommandRepository> mockCommandRepository;
         private readonly EventHub eventHub;
 
@@ -20,10 +19,9 @@ namespace ScratchMUD.Server.UnitTests.Hubs
                 Name = "Hub Tester"
             };
 
-            mockRoomRepositiory = new Mock<IRoomRepository>(MockBehavior.Strict);
             mockCommandRepository = new Mock<ICommandRepository>(MockBehavior.Strict);
 
-            eventHub = new EventHub(playerContext, mockRoomRepositiory.Object, mockCommandRepository.Object);
+            eventHub = new EventHub(playerContext, mockCommandRepository.Object);
         }
     }
 }

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace ScratchMUD.Server.Models
+namespace ScratchMUD.Server.EntityFramework
 {
     public partial class ScratchMUDContext : DbContext
     {
