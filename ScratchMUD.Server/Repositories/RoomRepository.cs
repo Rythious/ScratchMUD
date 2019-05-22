@@ -1,4 +1,5 @@
-﻿using ScratchMUD.Server.Models;
+﻿using ScratchMUD.Server.Constants;
+using ScratchMUD.Server.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -45,31 +46,149 @@ namespace ScratchMUD.Server.Repositories
 
         public async Task CreateNorthRoom(int roomId)
         {
+            Room currentRoom = ValidateDirectionOfNewRoom(roomId, Directions.North);
+
+            Room newRoom = await CreateNewRoom(currentRoom.AreaId, currentRoom.VirtualNumber, Directions.South);
+
+            currentRoom.NorthRoom = newRoom.VirtualNumber;
+
+            await context.SaveChangesAsync();
+        }
+
+        public async Task CreateEastRoom(int roomId)
+        {
+            Room currentRoom = ValidateDirectionOfNewRoom(roomId, Directions.East);
+
+            Room newRoom = await CreateNewRoom(currentRoom.AreaId, currentRoom.VirtualNumber, Directions.West);
+
+            currentRoom.EastRoom = newRoom.VirtualNumber;
+
+            await context.SaveChangesAsync();
+        }
+
+        public async Task CreateSouthRoom(int roomId)
+        {
+            Room currentRoom = ValidateDirectionOfNewRoom(roomId, Directions.South);
+
+            Room newRoom = await CreateNewRoom(currentRoom.AreaId, currentRoom.VirtualNumber, Directions.North);
+
+            currentRoom.SouthRoom = newRoom.VirtualNumber;
+
+            await context.SaveChangesAsync();
+        }
+
+        public async Task CreateWestRoom(int roomId)
+        {
+            Room currentRoom = ValidateDirectionOfNewRoom(roomId, Directions.West);
+
+            Room newRoom = await CreateNewRoom(currentRoom.AreaId, currentRoom.VirtualNumber, Directions.East);
+
+            currentRoom.WestRoom = newRoom.VirtualNumber;
+
+            await context.SaveChangesAsync();
+        }
+
+        public async Task CreateUpRoom(int roomId)
+        {
+            Room currentRoom = ValidateDirectionOfNewRoom(roomId, Directions.Up);
+
+            Room newRoom = await CreateNewRoom(currentRoom.AreaId, currentRoom.VirtualNumber, Directions.Down);
+
+            currentRoom.UpRoom = newRoom.VirtualNumber;
+
+            await context.SaveChangesAsync();
+        }
+
+        public async Task CreateDownRoom(int roomId)
+        {
+            Room currentRoom = ValidateDirectionOfNewRoom(roomId, Directions.Down);
+
+            Room newRoom = await CreateNewRoom(currentRoom.AreaId, currentRoom.VirtualNumber, Directions.Up);
+
+            currentRoom.DownRoom = newRoom.VirtualNumber;
+
+            await context.SaveChangesAsync();
+        }
+
+        private Room ValidateDirectionOfNewRoom(int roomId, Directions newRoomDirection)
+        {
             var currentRoom = context.Room.First(r => r.RoomId == roomId);
 
-            if (currentRoom.NorthRoom.HasValue)
+            bool isDirectionAvailable = false;
+
+            switch (newRoomDirection)
             {
-                throw new ArgumentException("Current room already has a north exit defined.");
+                case Directions.North:
+                    isDirectionAvailable = !currentRoom.NorthRoom.HasValue;
+                    break;
+                case Directions.East:
+                    isDirectionAvailable = !currentRoom.EastRoom.HasValue;
+                    break;
+                case Directions.South:
+                    isDirectionAvailable = !currentRoom.SouthRoom.HasValue;
+                    break;
+                case Directions.West:
+                    isDirectionAvailable = !currentRoom.WestRoom.HasValue;
+                    break;
+                case Directions.Up:
+                    isDirectionAvailable = !currentRoom.UpRoom.HasValue;
+                    break;
+                case Directions.Down:
+                    isDirectionAvailable = !currentRoom.DownRoom.HasValue;
+                    break;
+                default:
+                    break;
             }
 
-            var highestVirtualNumberForARoomInThisArea = context.Room.Where(r => r.AreaId == currentRoom.AreaId).OrderByDescending(r => r.VirtualNumber).First().VirtualNumber;
+            if (!isDirectionAvailable)
+            {
+                throw new ArgumentException($"Current room already has a {newRoomDirection.ToString().ToLower()} exit defined.");
+            }
+
+            return currentRoom;
+        }
+
+        private async Task<Room> CreateNewRoom(int areaId, short roomNumberOfOrigin, Directions originDirection)
+        {
+            var highestVirtualNumberForARoomInThisArea = context.Room.Where(r => r.AreaId == areaId).OrderByDescending(r => r.VirtualNumber).First().VirtualNumber;
 
             var newRoom = new Room
             {
-                SouthRoom = currentRoom.VirtualNumber,
                 VirtualNumber = ++highestVirtualNumberForARoomInThisArea,
                 CreatedByPlayerId = 1,
-                AreaId = currentRoom.AreaId,
+                AreaId = areaId,
                 CreatedOn = DateTime.Now
             };
+
+            switch (originDirection)
+            {
+                case Directions.North:
+                    newRoom.NorthRoom = roomNumberOfOrigin;
+                    break;
+                case Directions.East:
+                    newRoom.EastRoom = roomNumberOfOrigin;
+                    break;
+                case Directions.South:
+                    newRoom.SouthRoom = roomNumberOfOrigin;
+                    break;
+                case Directions.West:
+                    newRoom.WestRoom = roomNumberOfOrigin;
+                    break;
+                case Directions.Up:
+                    newRoom.UpRoom = roomNumberOfOrigin;
+                    break;
+                case Directions.Down:
+                    newRoom.DownRoom = roomNumberOfOrigin;
+                    break;
+                default:
+                    break;
+            }
 
             context.Add(newRoom);
 
             await context.SaveChangesAsync();
 
-            currentRoom.NorthRoom = newRoom.VirtualNumber;
-
-            await context.SaveChangesAsync();
+            return newRoom;
         }
     }
 }

@@ -13,7 +13,18 @@ namespace ScratchMUD.Server.Commands
     public class RoomEditCommand : ICommand
     {
         internal const string NAME = "roomedit";
-        private readonly string[] VALID_ACTIONS = new string[4] { "title", "short-description", "full-description", "create-north" };
+        private readonly string[] VALID_ACTIONS = new string[9] 
+        {
+            "title",
+            "short-description",
+            "full-description",
+            "create-north",
+            "create-east",
+            "create-south",
+            "create-west",
+            "create-up",
+            "create-down"
+        };
         private readonly EditingState editingState;
         private readonly IRoomRepository roomRepository;
 
@@ -31,7 +42,7 @@ namespace ScratchMUD.Server.Commands
 
         public string GeneralHelp => "If the user has sufficient editing permissions for the current area, they will enter editing mode of their current room.  The Exit subcommand will exit this mode.";
 
-        public string SyntaxHelp => "ROOMEDIT or ROOMEDIT EXIT, ROOMEDIT TITLE <VALUE>, ROOMEDIT SHORT-DESCRIPTION <VALUE>, ROOMEDIT FULL-DESCRIPTION <VALUE>, ROOMEDIT CREATE-NORTH";
+        public string SyntaxHelp => "ROOMEDIT or ROOMEDIT EXIT, ROOMEDIT TITLE <VALUE>, ROOMEDIT SHORT-DESCRIPTION <VALUE>, ROOMEDIT FULL-DESCRIPTION <VALUE>, ROOMEDIT CREATE-NORTH, ROOMEDIT CREATE-EAST, ROOMEDIT CREATE-SOUTH, ROOMEDIT CREATE-WEST, ROOMEDIT CREATE-UP, ROOMEDIT CREATE-DOWN";
         #endregion
 
         public async Task<List<(CommunicationChannel, string)>> ExecuteAsync(PlayerContext playerContext, params string[] parameters)
@@ -44,15 +55,37 @@ namespace ScratchMUD.Server.Commands
             }
             else if (parameters.Length == 1)
             {
-                if (parameters[0].ToLower() == "exit")
+                switch (parameters[0].ToLower())
                 {
-                    output.Add((CommunicationChannel.Self, ExitEditingModeWithResponse(playerContext)));
-                }
-
-                if (parameters[0].ToLower() == "create-north")
-                {
-                    await roomRepository.CreateNorthRoom(playerContext.CurrentRoomId);
-                    output.Add((CommunicationChannel.Self, "Room updated."));
+                    case "exit":
+                        output.Add((CommunicationChannel.Self, ExitEditingModeWithResponse(playerContext)));
+                        break;
+                    case "create-north":
+                        await roomRepository.CreateNorthRoom(playerContext.CurrentRoomId);
+                        output.Add((CommunicationChannel.Self, "Room updated."));
+                        break;
+                    case "create-east":
+                        await roomRepository.CreateEastRoom(playerContext.CurrentRoomId);
+                        output.Add((CommunicationChannel.Self, "Room updated."));
+                        break;
+                    case "create-south":
+                        await roomRepository.CreateSouthRoom(playerContext.CurrentRoomId);
+                        output.Add((CommunicationChannel.Self, "Room updated."));
+                        break;
+                    case "create-west":
+                        await roomRepository.CreateWestRoom(playerContext.CurrentRoomId);
+                        output.Add((CommunicationChannel.Self, "Room updated."));
+                        break;
+                    case "create-up":
+                        await roomRepository.CreateUpRoom(playerContext.CurrentRoomId);
+                        output.Add((CommunicationChannel.Self, "Room updated."));
+                        break;
+                    case "create-down":
+                        await roomRepository.CreateDownRoom(playerContext.CurrentRoomId);
+                        output.Add((CommunicationChannel.Self, "Room updated."));
+                        break;
+                    default:
+                        break;
                 }
             }
             else //parameters.Length > 1
