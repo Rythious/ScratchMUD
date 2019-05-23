@@ -21,7 +21,13 @@ namespace ScratchMUD.Server.Commands
             {
                 [RoomEditCommand.NAME] = new RoomEditCommand(editingState, roomRepository),
                 [SayCommand.NAME] = new SayCommand(),
-                [LookCommand.NAME] = new LookCommand(roomRepository)
+                [LookCommand.NAME] = new LookCommand(roomRepository),
+                [Directions.North.ToString().ToLower()] = new MoveCommand(Directions.North),
+                [Directions.East.ToString().ToLower()] = new MoveCommand(Directions.East),
+                [Directions.South.ToString().ToLower()] = new MoveCommand(Directions.South),
+                [Directions.West.ToString().ToLower()] = new MoveCommand(Directions.West),
+                [Directions.Up.ToString().ToLower()] = new MoveCommand(Directions.Up),
+                [Directions.Down.ToString().ToLower()] = new MoveCommand(Directions.Down)
             };
 
             CommandDictionary[HelpCommand.NAME] = new HelpCommand(CommandDictionary);
