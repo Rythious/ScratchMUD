@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Commands
 {
-    public class RoomEditCommand : ICommand
+    internal class RoomEditCommand : Command, ICommand
     {
         internal const string NAME = "roomedit";
         private readonly string[] VALID_ACTIONS = new string[9] 
@@ -35,17 +35,11 @@ namespace ScratchMUD.Server.Commands
         {
             this.editingState = editingState;
             this.roomRepository = roomRepository;
+
+            Name = NAME;
+            SyntaxHelp = "ROOMEDIT or ROOMEDIT EXIT, ROOMEDIT TITLE <VALUE>, ROOMEDIT SHORT-DESCRIPTION <VALUE>, ROOMEDIT FULL-DESCRIPTION <VALUE>, ROOMEDIT CREATE-NORTH, ROOMEDIT CREATE-EAST, ROOMEDIT CREATE-SOUTH, ROOMEDIT CREATE-WEST, ROOMEDIT CREATE-UP, ROOMEDIT CREATE-DOWN";
+            GeneralHelp = "If the user has sufficient editing permissions for the current area, they will enter editing mode of their current room.  The Exit subcommand will exit this mode.";
         }
-
-        #region Syntax, Help, and Name
-        public string Name { get; } = NAME;
-
-        public string GeneralHelp => "If the user has sufficient editing permissions for the current area, they will enter editing mode of their current room.  The Exit subcommand will exit this mode.";
-
-        public string SyntaxHelp => "ROOMEDIT or ROOMEDIT EXIT, ROOMEDIT TITLE <VALUE>, ROOMEDIT SHORT-DESCRIPTION <VALUE>, ROOMEDIT FULL-DESCRIPTION <VALUE>, ROOMEDIT CREATE-NORTH, ROOMEDIT CREATE-EAST, ROOMEDIT CREATE-SOUTH, ROOMEDIT CREATE-WEST, ROOMEDIT CREATE-UP, ROOMEDIT CREATE-DOWN";
-
-        public string InvalidSyntaxErrorText => $"Invalid syntax of {Name.ToUpper()} command: " + SyntaxHelp;
-        #endregion
 
         public async Task<List<(CommunicationChannel, string)>> ExecuteAsync(PlayerContext playerContext, params string[] parameters)
         {
@@ -66,6 +60,7 @@ namespace ScratchMUD.Server.Commands
                         output.Add((CommunicationChannel.Self, await CreateRoomWithResponse(playerContext.CurrentRoomId, parameters)));
                         break;
                     default:
+                        output.Add((CommunicationChannel.Self, InvalidSyntaxErrorText));
                         break;
                 }
             }

@@ -5,17 +5,16 @@ using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Commands
 {
-    internal class SayCommand : ICommand
+    internal class SayCommand : Command, ICommand
     {
         internal const string NAME = "say";
 
-        #region Syntax, Help, and Name
-        public string Name { get; } = NAME;
-
-        public string SyntaxHelp => "SAY <VALUE>";
-
-        public string GeneralHelp => "Your character speaks to the other characters in the room.";
-        #endregion
+        public SayCommand()
+        {
+            Name = NAME;
+            SyntaxHelp = "SAY <VALUE>";
+            GeneralHelp = "Your character speaks to the other characters in the room.";
+        }
 
         public Task<List<(CommunicationChannel, string)>> ExecuteAsync(PlayerContext playerContext, params string[] parameters)
         {

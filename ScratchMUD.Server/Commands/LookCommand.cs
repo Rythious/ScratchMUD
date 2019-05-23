@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Commands
 {
-    public class LookCommand : ICommand
+    internal class LookCommand : Command, ICommand
     {
         internal const string NAME = "look";
         private readonly IRoomRepository roomRepository;
@@ -15,15 +15,11 @@ namespace ScratchMUD.Server.Commands
         public LookCommand(IRoomRepository roomRepository)
         {
             this.roomRepository = roomRepository;
+
+            Name = NAME;
+            SyntaxHelp = "LOOK";
+            GeneralHelp = "Looks at the details of the current room.";
         }
-
-        #region Syntax, Help, and Name
-        public string Name => NAME;
-
-        public string SyntaxHelp => "LOOK";
-
-        public string GeneralHelp => "Looks at the details of the current room.";
-        #endregion
 
         public Task<List<(CommunicationChannel, string)>> ExecuteAsync(PlayerContext playerContext, params string[] parameters)
         {
