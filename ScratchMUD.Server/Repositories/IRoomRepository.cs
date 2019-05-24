@@ -15,5 +15,6 @@ namespace ScratchMUD.Server.Repositories
         Task CreateWestRoom(int roomId);
         Task CreateUpRoom(int roomId);
         Task CreateDownRoom(int roomId);
+        int GetRoomIdByAreaAndVirtualNumber(int areaId, int virtualNumber);
     }
 }

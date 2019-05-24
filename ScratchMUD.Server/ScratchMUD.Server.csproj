@@ -7,8 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Migrations\20190517010424_InitialCreate.cs" />
-    <Compile Remove="Migrations\20190517010424_InitialCreate.Designer.cs" />
+    <Compile Remove="Migrations\**" />
+    <Content Remove="Migrations\**" />
+    <EmbeddedResource Remove="Migrations\**" />
+    <None Remove="Migrations\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,10 +21,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ScratchMUD.Server.Models\ScratchMUD.Server.Models.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>

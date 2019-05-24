@@ -1,4 +1,5 @@
-﻿using ScratchMUD.Server.Models;
+﻿using ScratchMUD.Server.Infrastructure;
+using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
 using ScratchMUD.Server.Repositories;
 using System.Collections.Generic;
@@ -12,27 +13,34 @@ namespace ScratchMUD.Server.Commands
         internal const string NAME = "look";
         private readonly IRoomRepository roomRepository;
 
-        public LookCommand(IRoomRepository roomRepository)
+        public LookCommand(
+            IRoomRepository roomRepository
+        )
         {
             this.roomRepository = roomRepository;
 
             Name = NAME;
             SyntaxHelp = "LOOK";
             GeneralHelp = "Looks at the details of the current room.";
+            MaximumParameterCount = 0;
         }
 
-        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(PlayerContext playerContext, params string[] parameters)
+        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, params string[] parameters)
         {
-            var roomDetails = roomRepository.GetRoomWithTranslatedValues(playerContext.CurrentRoomId);
+            ThrowInvalidCommandSyntaxExceptionIfTooManyParameters(parameters);
+            
+            var roomDetails = roomRepository.GetRoomWithTranslatedValues(connectedPlayer.RoomId);
 
             var exitsOutputString = BuildExitsString(roomDetails.Exits);
 
-            return Task.Run(() => new List<(CommunicationChannel, string)>
+            var output = new List<(CommunicationChannel, string)>
             {
                 (CommunicationChannel.Self, roomDetails.Title),
                 (CommunicationChannel.Self, roomDetails.FullDescription),
                 (CommunicationChannel.Self, exitsOutputString)
-            });
+            };
+
+            return Task.Run(() => output);
         }
 
         private string BuildExitsString(HashSet<(Directions, int)> exits)

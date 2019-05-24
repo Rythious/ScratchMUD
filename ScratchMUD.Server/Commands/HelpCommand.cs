@@ -1,4 +1,5 @@
-﻿using ScratchMUD.Server.Models;
+﻿using ScratchMUD.Server.Infrastructure;
+using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace ScratchMUD.Server.Commands
             GeneralHelp = "Returns helpful information about available commands.";
         }
 
-        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(PlayerContext playerContext, params string[] parameters)
+        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, params string[] parameters)
         {
             var output = new List<(CommunicationChannel, string)>();
 
@@ -47,7 +48,7 @@ namespace ScratchMUD.Server.Commands
             }
             else
             {
-                output.Add((CommunicationChannel.Self, $"Invalid syntax of {Name.ToUpper()} command: " + SyntaxHelp));
+                output.Add((CommunicationChannel.Self, InvalidSyntaxErrorText));
             }
 
             return Task.Run(() => output);

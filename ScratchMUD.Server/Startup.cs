@@ -4,12 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using ScratchMUD.Server.Commands;
 using ScratchMUD.Server.EntityFramework;
 using ScratchMUD.Server.HostedServices;
 using ScratchMUD.Server.Hubs;
 using ScratchMUD.Server.Infrastructure;
-using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Repositories;
 
 namespace ScratchMUD.Server
@@ -33,10 +31,11 @@ namespace ScratchMUD.Server
                 options.EnableDetailedErrors = true;
             });
             services.AddHostedService<ServerTimeHostedService>();
-            services.AddTransient<PlayerContext>();
             services.AddScoped<ICommandRepository, CommandRepository>();
             services.AddScoped<IRoomRepository, RoomRepository>();
+            services.AddScoped<IPlayerRepository, PlayerRepository>();
             services.AddSingleton<EditingState>();
+            services.AddSingleton<IPlayerConnections, PlayerConnections>();
             services.AddDbContext<ScratchMUDContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("ScratchMudServer"))
             );

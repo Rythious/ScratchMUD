@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ScratchMUD.Server.Infrastructure;
-using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
 using ScratchMUD.Server.Repositories;
 using System;
@@ -13,7 +12,7 @@ namespace ScratchMUD.Server.Commands
     internal class RoomEditCommand : Command, ICommand
     {
         internal const string NAME = "roomedit";
-        private readonly string[] VALID_ACTIONS = new string[9] 
+        private readonly string[] VALID_ACTIONS = new string[9]
         {
             "title",
             "short-description",
@@ -41,23 +40,23 @@ namespace ScratchMUD.Server.Commands
             GeneralHelp = "If the user has sufficient editing permissions for the current area, they will enter editing mode of their current room.  The Exit subcommand will exit this mode.";
         }
 
-        public async Task<List<(CommunicationChannel, string)>> ExecuteAsync(PlayerContext playerContext, params string[] parameters)
+        public async Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, params string[] parameters)
         {
             var output = new List<(CommunicationChannel, string)>();
 
             if (parameters.Length == 0)
             {
-                output.Add((CommunicationChannel.Self, EnterEditingModeWithResponse(playerContext)));
+                output.Add((CommunicationChannel.Self, EnterEditingModeWithResponse(connectedPlayer.Name)));
             }
             else if (parameters.Length == 1)
             {
                 switch (parameters[0].ToLower())
                 {
                     case "exit":
-                        output.Add((CommunicationChannel.Self, ExitEditingModeWithResponse(playerContext)));
+                        output.Add((CommunicationChannel.Self, ExitEditingModeWithResponse(connectedPlayer.Name)));
                         break;
                     case string command when command.StartsWith("create-"):
-                        output.Add((CommunicationChannel.Self, await CreateRoomWithResponse(playerContext.CurrentRoomId, parameters)));
+                        output.Add((CommunicationChannel.Self, await CreateRoomWithResponse(connectedPlayer.RoomId, parameters)));
                         break;
                     default:
                         output.Add((CommunicationChannel.Self, InvalidSyntaxErrorText));
@@ -66,7 +65,7 @@ namespace ScratchMUD.Server.Commands
             }
             else //parameters.Length > 1
             {
-                output.Add((CommunicationChannel.Self, await UpdateRoomDetailWithResponse(playerContext, parameters)));
+                output.Add((CommunicationChannel.Self, await UpdateRoomDetailWithResponse(connectedPlayer, parameters)));
             }
 
             return output;
@@ -108,11 +107,11 @@ namespace ScratchMUD.Server.Commands
             return InvalidSyntaxErrorText;
         }
 
-        private async Task<string> UpdateRoomDetailWithResponse(PlayerContext playerContext, string[] parameters)
+        private async Task<string> UpdateRoomDetailWithResponse(ConnectedPlayer connectedPlayer, string[] parameters)
         {
             if (VALID_ACTIONS.Contains(parameters[0].ToLower()))
             {
-                if (!editingState.IsPlayerCurrentlyEditing(playerContext.Name, out EditType? editType) || editType != EditType.Room)
+                if (!editingState.IsPlayerCurrentlyEditing(connectedPlayer.Name, out EditType? editType) || editType != EditType.Room)
                 {
                     return "Must be in room edit mode.";
                 }
@@ -125,13 +124,13 @@ namespace ScratchMUD.Server.Commands
                         switch (parameters[0].ToLower())
                         {
                             case "title":
-                                await roomRepository.UpdateTitle(playerContext.CurrentRoomId, valuePortionOfCommand);
+                                await roomRepository.UpdateTitle(connectedPlayer.RoomId, valuePortionOfCommand);
                                 break;
                             case "short-description":
-                                await roomRepository.UpdateShortDescription(playerContext.CurrentRoomId, valuePortionOfCommand);
+                                await roomRepository.UpdateShortDescription(connectedPlayer.RoomId, valuePortionOfCommand);
                                 break;
                             case "full-description":
-                                await roomRepository.UpdateFullDescription(playerContext.CurrentRoomId, valuePortionOfCommand);
+                                await roomRepository.UpdateFullDescription(connectedPlayer.RoomId, valuePortionOfCommand);
                                 break;
                             default:
                                 break;
@@ -149,25 +148,25 @@ namespace ScratchMUD.Server.Commands
             return InvalidSyntaxErrorText;
         }
 
-        private string EnterEditingModeWithResponse(PlayerContext playerContext)
+        private string EnterEditingModeWithResponse(string playerName)
         {
             //TODO: See if the current player is listed as an editor for the current area.
 
-            if (editingState.IsPlayerCurrentlyEditing(playerContext.Name, out EditType? editType))
+            if (editingState.IsPlayerCurrentlyEditing(playerName, out EditType? editType))
             {
                 return $"Player is already editing a { editType }!";
             }
             else
             {
-                editingState.AddPlayerEditor(playerContext.Name, EditType.Room);
+                editingState.AddPlayerEditor(playerName, EditType.Room);
 
                 return "You are editing the room.";
             }
         }
 
-        private string ExitEditingModeWithResponse(PlayerContext playerContext)
+        private string ExitEditingModeWithResponse(string playerName)
         {
-            editingState.RemovePlayerEditor(playerContext.Name);
+            editingState.RemovePlayerEditor(playerName);
 
             return "You are no longer editing the room.";
         }

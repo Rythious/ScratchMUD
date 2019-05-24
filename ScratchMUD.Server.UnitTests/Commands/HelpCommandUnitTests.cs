@@ -1,5 +1,7 @@
 using Moq;
 using ScratchMUD.Server.Commands;
+using ScratchMUD.Server.EntityFramework;
+using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
 using System;
@@ -70,7 +72,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var helpCommand = new HelpCommand(commandDictionary);
 
             //Act
-            var result = await helpCommand.ExecuteAsync(new PlayerContext());
+            var result = await helpCommand.ExecuteAsync(new ConnectedPlayer(new PlayerCharacter()));
 
             //Assert
             Assert.NotNull(result);
@@ -101,7 +103,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var helpCommand = new HelpCommand(commandDictionary);
 
             //Act
-            var result = await helpCommand.ExecuteAsync(new PlayerContext(), "not" + COMMAND1_NAME);
+            var result = await helpCommand.ExecuteAsync(new ConnectedPlayer(new PlayerCharacter()), "not" + COMMAND1_NAME);
 
             //Assert
             Assert.NotNull(result);
@@ -131,7 +133,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var helpCommand = new HelpCommand(commandDictionary);
 
             //Act
-            var result = await helpCommand.ExecuteAsync(new PlayerContext(), COMMAND1_NAME);
+            var result = await helpCommand.ExecuteAsync(new ConnectedPlayer(new PlayerCharacter()), COMMAND1_NAME);
 
             //Assert
             mockHelpCommand.VerifyAll();
@@ -154,7 +156,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var helpCommand = new HelpCommand(commandDictionary);
 
             //Act
-            var result = await helpCommand.ExecuteAsync(new PlayerContext(), "one", "two");
+            var result = await helpCommand.ExecuteAsync(new ConnectedPlayer(new PlayerCharacter()), "one", "two");
 
             //Assert
             Assert.NotNull(result);

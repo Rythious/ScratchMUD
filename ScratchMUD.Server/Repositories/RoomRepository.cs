@@ -24,17 +24,18 @@ namespace ScratchMUD.Server.Repositories
         public Models.Room GetRoomWithTranslatedValues(int roomId)
         {
             var room = context.Room.Single(r => r.RoomId == roomId);
-            var roomTranslation = context.RoomTranslation.Single(rt => rt.LanguageId == 1 && rt.RoomId == roomId);
+            var roomTranslation = context.RoomTranslation.SingleOrDefault(rt => rt.LanguageId == 1 && rt.RoomId == roomId);
             var authoringPlayerCharacter = context.PlayerCharacter.Single(pc => pc.PlayerCharacterId == room.CreatedByPlayerId);
 
             return new Models.Room
             {
-                FullDescription = roomTranslation.FullDescription,
-                ShortDescription = roomTranslation.ShortDescription,
+                FullDescription = roomTranslation?.FullDescription,
+                ShortDescription = roomTranslation?.ShortDescription,
                 Id = roomId,
+                AreaId = room.AreaId,
                 Exits = BuildExitsHashSetFromRoomData(room),
                 Author = authoringPlayerCharacter.Name,
-                Title = roomTranslation.Title
+                Title = roomTranslation?.Title
             };
         }
 
@@ -244,6 +245,11 @@ namespace ScratchMUD.Server.Repositories
             await context.SaveChangesAsync();
 
             return newRoom;
+        }
+
+        public int GetRoomIdByAreaAndVirtualNumber(int areaId, int virtualNumber)
+        {
+            return context.Room.Single(r => r.AreaId == areaId && r.VirtualNumber == virtualNumber).RoomId;
         }
     }
 }
