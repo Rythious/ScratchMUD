@@ -23,6 +23,7 @@ namespace ScratchMUD.Server.Commands
             Direction = direction;
             this.roomRepository = roomRepository;
             this.playerRepository = playerRepository;
+
             Name = direction.ToString();
             SyntaxHelp = direction.ToString().ToUpper();
             GeneralHelp = $"If there is an exit to the {direction.ToString().ToLower()}, moves you to that room.";

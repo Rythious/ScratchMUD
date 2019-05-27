@@ -2,7 +2,6 @@ using Moq;
 using ScratchMUD.Server.Commands;
 using ScratchMUD.Server.EntityFramework;
 using ScratchMUD.Server.Infrastructure;
-using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
 using System;
 using System.Collections.Generic;
