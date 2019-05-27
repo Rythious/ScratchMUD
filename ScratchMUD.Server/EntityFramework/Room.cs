@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace ScratchMUD.Server.Models
+namespace ScratchMUD.Server.EntityFramework
 {
     public partial class Room
     {
         public Room()
         {
+            PlayerCharacter = new HashSet<PlayerCharacter>();
             RoomItem = new HashSet<RoomItem>();
             RoomNpc = new HashSet<RoomNpc>();
             RoomTranslation = new HashSet<RoomTranslation>();
@@ -27,6 +28,7 @@ namespace ScratchMUD.Server.Models
 
         public virtual Area Area { get; set; }
         public virtual PlayerCharacter CreatedByPlayer { get; set; }
+        public virtual ICollection<PlayerCharacter> PlayerCharacter { get; set; }
         public virtual ICollection<RoomItem> RoomItem { get; set; }
         public virtual ICollection<RoomNpc> RoomNpc { get; set; }
         public virtual ICollection<RoomTranslation> RoomTranslation { get; set; }

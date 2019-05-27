@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace ScratchMUD.Server.Models
+namespace ScratchMUD.Server.EntityFramework
 {
     public partial class Language
     {

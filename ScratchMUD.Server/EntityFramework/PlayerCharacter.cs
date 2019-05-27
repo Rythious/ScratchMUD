@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace ScratchMUD.Server.Models
+namespace ScratchMUD.Server.EntityFramework
 {
     public partial class PlayerCharacter
     {
@@ -13,16 +13,18 @@ namespace ScratchMUD.Server.Models
             Item = new HashSet<Item>();
             Npc = new HashSet<Npc>();
             PlayerCharacterItem = new HashSet<PlayerCharacterItem>();
-            Room = new HashSet<Room>();
+            RoomNavigation = new HashSet<Room>();
         }
 
         public int PlayerCharacterId { get; set; }
         public short WorldId { get; set; }
+        public int RoomId { get; set; }
         public string Name { get; set; }
         public short Level { get; set; }
         public DateTime CreatedOn { get; set; }
         public DateTime? ModifiedOn { get; set; }
 
+        public virtual Room Room { get; set; }
         public virtual World World { get; set; }
         public virtual ICollection<Area> AreaCreatedByPlayer { get; set; }
         public virtual ICollection<AreaEditor> AreaEditor { get; set; }
@@ -30,6 +32,6 @@ namespace ScratchMUD.Server.Models
         public virtual ICollection<Item> Item { get; set; }
         public virtual ICollection<Npc> Npc { get; set; }
         public virtual ICollection<PlayerCharacterItem> PlayerCharacterItem { get; set; }
-        public virtual ICollection<Room> Room { get; set; }
+        public virtual ICollection<Room> RoomNavigation { get; set; }
     }
 }

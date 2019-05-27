@@ -1,5 +1,6 @@
 using ScratchMUD.Server.Commands;
-using ScratchMUD.Server.Models;
+using ScratchMUD.Server.EntityFramework;
+using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models.Constants;
 using System;
 using System.Threading.Tasks;
@@ -52,7 +53,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
         public async Task ExecuteAsyncWhenNoParametersAreSentInAMessageToThePlayerIsReturnedIndicatingNoWords()
         {
             //Arrange & Act
-            var result = await sayCommand.ExecuteAsync(new PlayerContext());
+            var result = await sayCommand.ExecuteAsync(new ConnectedPlayer(new PlayerCharacter()));
 
             //Assert
             Assert.NotNull(result);
@@ -67,16 +68,16 @@ namespace ScratchMUD.Server.UnitTests.Commands
         public async Task ExecuteAsyncWhenTwoParametersArePassedInTheyAreBothIncludedInTheOutgoingMessageToEveryone()
         {
             //Arrange
-            var playerContext = new PlayerContext
+            var connectedPlayer = new ConnectedPlayer(new PlayerCharacter
             {
                 Name = "Trouble"
-            };
+            });
             
             var firstParameter = "one";
             var secondParameter = "two";
 
             //Act
-            var result = await sayCommand.ExecuteAsync(playerContext, firstParameter, secondParameter);
+            var result = await sayCommand.ExecuteAsync(connectedPlayer, firstParameter, secondParameter);
 
             //Assert
             Assert.NotNull(result);
@@ -84,7 +85,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
             Assert.Equal(CommunicationChannel.Everyone, result[0].Item1);
             Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Contains(playerContext.Name, result[0].Item2);
+            Assert.Contains(connectedPlayer.Name, result[0].Item2);
             Assert.Contains(firstParameter + " " + secondParameter, result[0].Item2, StringComparison.OrdinalIgnoreCase);
         }
     }

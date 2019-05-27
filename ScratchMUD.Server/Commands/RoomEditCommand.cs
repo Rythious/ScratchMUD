@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ScratchMUD.Server.Infrastructure;
-using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
 using ScratchMUD.Server.Repositories;
 using System;
@@ -10,10 +9,21 @@ using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Commands
 {
-    public class RoomEditCommand : ICommand
+    internal class RoomEditCommand : Command, ICommand
     {
         internal const string NAME = "roomedit";
-        private readonly string[] VALID_ACTIONS = new string[3] { "title", "short-description", "full-description" };
+        private readonly string[] VALID_ACTIONS = new string[9]
+        {
+            "title",
+            "short-description",
+            "full-description",
+            "create-north",
+            "create-east",
+            "create-south",
+            "create-west",
+            "create-up",
+            "create-down"
+        };
         private readonly EditingState editingState;
         private readonly IRoomRepository roomRepository;
 
@@ -24,54 +34,84 @@ namespace ScratchMUD.Server.Commands
         {
             this.editingState = editingState;
             this.roomRepository = roomRepository;
+
+            Name = NAME;
+            SyntaxHelp = "ROOMEDIT or ROOMEDIT EXIT, ROOMEDIT TITLE <VALUE>, ROOMEDIT SHORT-DESCRIPTION <VALUE>, ROOMEDIT FULL-DESCRIPTION <VALUE>, ROOMEDIT CREATE-NORTH, ROOMEDIT CREATE-EAST, ROOMEDIT CREATE-SOUTH, ROOMEDIT CREATE-WEST, ROOMEDIT CREATE-UP, ROOMEDIT CREATE-DOWN";
+            GeneralHelp = "If the user has sufficient editing permissions for the current area, they will enter editing mode of their current room.  The Exit subcommand will exit this mode.";
         }
 
-        #region Syntax, Help, and Name
-        public string Name { get; } = NAME;
-
-        public string GeneralHelp => "If the user has sufficient editing permissions for the current area, they will enter editing mode of their current room.  The Exit subcommand will exit this mode.";
-
-        public string SyntaxHelp => "ROOMEDIT or ROOMEDIT EXIT, ROOMEDIT TITLE <VALUE>, ROOMEDIT SHORT-DESCRIPTION <VALUE>, ROOMEDIT FULL-DESCRIPTION <VALUE>";
-        #endregion
-
-        public async Task<List<(CommunicationChannel, string)>> ExecuteAsync(PlayerContext playerContext, params string[] parameters)
+        public async Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, params string[] parameters)
         {
             var output = new List<(CommunicationChannel, string)>();
 
             if (parameters.Length == 0)
             {
-                output.Add((CommunicationChannel.Self, EnterEditingModeWithResponse(playerContext)));
+                output.Add((CommunicationChannel.Self, EnterEditingModeWithResponse(connectedPlayer.Name)));
             }
             else if (parameters.Length == 1)
             {
-                if (parameters[0].ToLower() == "exit")
+                switch (parameters[0].ToLower())
                 {
-                    output.Add((CommunicationChannel.Self, ExitEditingModeWithResponse(playerContext)));
+                    case "exit":
+                        output.Add((CommunicationChannel.Self, ExitEditingModeWithResponse(connectedPlayer.Name)));
+                        break;
+                    case string command when command.StartsWith("create-"):
+                        output.Add((CommunicationChannel.Self, await CreateRoomWithResponse(connectedPlayer.RoomId, parameters)));
+                        break;
+                    default:
+                        output.Add((CommunicationChannel.Self, InvalidSyntaxErrorText));
+                        break;
                 }
             }
             else //parameters.Length > 1
             {
-                var response = await UpdateRoomDetailWithResponse(playerContext, parameters);
-
-                if (!string.IsNullOrEmpty(response))
-                {
-                    output.Add((CommunicationChannel.Self, response));
-                }
-            }
-
-            if (output.Count == 0)
-            {
-                output.Add((CommunicationChannel.Self, $"Invalid syntax of {Name.ToUpper()} command: " + SyntaxHelp));
+                output.Add((CommunicationChannel.Self, await UpdateRoomDetailWithResponse(connectedPlayer, parameters)));
             }
 
             return output;
         }
 
-        private async Task<string> UpdateRoomDetailWithResponse(PlayerContext playerContext, string[] parameters)
+        private async Task<string> CreateRoomWithResponse(int currentRoomId, string[] parameters)
+        {
+            var wasCommandRecognized = true;
+            switch (parameters[0].ToLower())
+            {
+                case "create-north":
+                    await roomRepository.CreateNorthRoom(currentRoomId);
+                    break;
+                case "create-east":
+                    await roomRepository.CreateEastRoom(currentRoomId);
+                    break;
+                case "create-south":
+                    await roomRepository.CreateSouthRoom(currentRoomId);
+                    break;
+                case "create-west":
+                    await roomRepository.CreateWestRoom(currentRoomId);
+                    break;
+                case "create-up":
+                    await roomRepository.CreateUpRoom(currentRoomId);
+                    break;
+                case "create-down":
+                    await roomRepository.CreateDownRoom(currentRoomId);
+                    break;
+                default:
+                    wasCommandRecognized = false;
+                    break;
+            }
+
+            if (wasCommandRecognized)
+            {
+                return "Room updated.";
+            }
+
+            return InvalidSyntaxErrorText;
+        }
+
+        private async Task<string> UpdateRoomDetailWithResponse(ConnectedPlayer connectedPlayer, string[] parameters)
         {
             if (VALID_ACTIONS.Contains(parameters[0].ToLower()))
             {
-                if (!editingState.IsPlayerCurrentlyEditing(playerContext.Name, out EditType? editType) || editType != EditType.Room)
+                if (!editingState.IsPlayerCurrentlyEditing(connectedPlayer.Name, out EditType? editType) || editType != EditType.Room)
                 {
                     return "Must be in room edit mode.";
                 }
@@ -84,13 +124,13 @@ namespace ScratchMUD.Server.Commands
                         switch (parameters[0].ToLower())
                         {
                             case "title":
-                                await roomRepository.UpdateTitle(valuePortionOfCommand);
+                                await roomRepository.UpdateTitle(connectedPlayer.RoomId, valuePortionOfCommand);
                                 break;
                             case "short-description":
-                                await roomRepository.UpdateShortDescription(valuePortionOfCommand);
+                                await roomRepository.UpdateShortDescription(connectedPlayer.RoomId, valuePortionOfCommand);
                                 break;
                             case "full-description":
-                                await roomRepository.UpdateFullDescription(valuePortionOfCommand);
+                                await roomRepository.UpdateFullDescription(connectedPlayer.RoomId, valuePortionOfCommand);
                                 break;
                             default:
                                 break;
@@ -105,28 +145,28 @@ namespace ScratchMUD.Server.Commands
                 }
             }
 
-            return null;
+            return InvalidSyntaxErrorText;
         }
 
-        private string EnterEditingModeWithResponse(PlayerContext playerContext)
+        private string EnterEditingModeWithResponse(string playerName)
         {
             //TODO: See if the current player is listed as an editor for the current area.
 
-            if (editingState.IsPlayerCurrentlyEditing(playerContext.Name, out EditType? editType))
+            if (editingState.IsPlayerCurrentlyEditing(playerName, out EditType? editType))
             {
                 return $"Player is already editing a { editType }!";
             }
             else
             {
-                editingState.AddPlayerEditor(playerContext.Name, EditType.Room);
+                editingState.AddPlayerEditor(playerName, EditType.Room);
 
                 return "You are editing the room.";
             }
         }
 
-        private string ExitEditingModeWithResponse(PlayerContext playerContext)
+        private string ExitEditingModeWithResponse(string playerName)
         {
-            editingState.RemovePlayerEditor(playerContext.Name);
+            editingState.RemovePlayerEditor(playerName);
 
             return "You are no longer editing the room.";
         }

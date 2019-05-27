@@ -1,4 +1,5 @@
-﻿using ScratchMUD.Server.Models;
+﻿using ScratchMUD.Server.Infrastructure;
+using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Commands
 {
-    public class HelpCommand : ICommand
+    internal class HelpCommand : Command, ICommand
     {
         internal const string NAME = "help";
         private readonly IDictionary<string, ICommand> commandDictionary;
@@ -14,17 +15,13 @@ namespace ScratchMUD.Server.Commands
         internal HelpCommand(IDictionary<string, ICommand> commandDictionary)
         {
             this.commandDictionary = commandDictionary;
+
+            Name = NAME;
+            SyntaxHelp = "HELP or HELP <COMMAND>";
+            GeneralHelp = "Returns helpful information about available commands.";
         }
 
-        #region Syntax, Help, and Name
-        public string Name { get; } = NAME;
-
-        public string SyntaxHelp => "HELP or HELP <COMMAND>";
-
-        public string GeneralHelp => "Returns helpful information about available commands.";
-        #endregion
-
-        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(PlayerContext playerContext, params string[] parameters)
+        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, params string[] parameters)
         {
             var output = new List<(CommunicationChannel, string)>();
 
@@ -51,7 +48,7 @@ namespace ScratchMUD.Server.Commands
             }
             else
             {
-                output.Add((CommunicationChannel.Self, $"Invalid syntax of {Name.ToUpper()} command: " + SyntaxHelp));
+                output.Add((CommunicationChannel.Self, InvalidSyntaxErrorText));
             }
 
             return Task.Run(() => output);
