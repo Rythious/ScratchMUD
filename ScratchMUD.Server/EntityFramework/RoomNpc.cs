@@ -4,6 +4,7 @@ namespace ScratchMUD.Server.EntityFramework
 {
     public partial class RoomNpc
     {
+        public int RoomNpcId { get; set; }
         public int RoomId { get; set; }
         public int NpcId { get; set; }
         public DateTime CreatedOn { get; set; }
