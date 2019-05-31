@@ -1,5 +1,4 @@
 ﻿using ScratchMUD.Server.Infrastructure;
-using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
 using ScratchMUD.Server.Repositories;
 using System.Collections.Generic;
@@ -28,7 +27,7 @@ namespace ScratchMUD.Server.Commands
         public Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, params string[] parameters)
         {
             ThrowInvalidCommandSyntaxExceptionIfTooManyParameters(parameters);
-            
+
             var roomDetails = roomRepository.GetRoomWithTranslatedValues(connectedPlayer.RoomId);
 
             var exitsOutputString = BuildExitsString(roomDetails.Exits);
@@ -39,6 +38,8 @@ namespace ScratchMUD.Server.Commands
                 (CommunicationChannel.Self, roomDetails.FullDescription),
                 (CommunicationChannel.Self, exitsOutputString)
             };
+
+            output.AddRange(roomDetails.Npcs.Select(n => (CommunicationChannel.Self, $"{n.ShortDescription} is here.")).ToList());
 
             return Task.Run(() => output);
         }
