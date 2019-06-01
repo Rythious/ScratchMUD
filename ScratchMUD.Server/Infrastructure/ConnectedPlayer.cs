@@ -8,9 +8,7 @@ namespace ScratchMUD.Server.Infrastructure
         internal PlayerCharacter PlayerCharacter { get; set; }
         private readonly Queue<string> commandQueue = new Queue<string>();
 
-        public ConnectedPlayer(
-            PlayerCharacter playerCharacter
-        )
+        public ConnectedPlayer(PlayerCharacter playerCharacter)
         {
             PlayerCharacter = playerCharacter;
         }
