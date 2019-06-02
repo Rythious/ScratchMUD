@@ -9,8 +9,6 @@ namespace ScratchMUD.Server.Repositories
 {
     public class CommandRepository : ICommandRepository
     {
-        private readonly IPlayerRepository playerRepository;
-
         private Dictionary<string, ICommand> CommandDictionary { get; }
 
         public CommandRepository(
@@ -33,7 +31,6 @@ namespace ScratchMUD.Server.Repositories
             };
 
             CommandDictionary[HelpCommand.NAME] = new HelpCommand(CommandDictionary);
-            this.playerRepository = playerRepository;
         }
 
         public async Task<IEnumerable<(CommunicationChannel, string)>> ExecuteCommandAsync(ConnectedPlayer connectedPlayer, string command, params string[] parameters)

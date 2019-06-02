@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace ScratchMUD.Server.Infrastructure
 {
@@ -34,6 +35,15 @@ namespace ScratchMUD.Server.Infrastructure
         public int GetAvailablePlayerCharacterId()
         {
             return AvailablePlayerCharacterIds.Dequeue();
+        }
+
+        public List<string> GetConnectedPlayersInTheSameRoomAsAConnection(string connectionId)
+        {
+            var connectedPlayer = GetConnectedPlayerByConnectionId(connectionId);
+
+            var allConnectionsInSameRoom = ConnectedPlayers.Where(cp => cp.Value.RoomId == connectedPlayer.RoomId).Select(cp => cp.Key).ToList();
+
+            return allConnectionsInSameRoom;
         }
     }
 }
