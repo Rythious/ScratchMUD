@@ -56,7 +56,7 @@ namespace ScratchMUD.Server.Commands
                         output.Add((CommunicationChannel.Self, ExitEditingModeWithResponse(connectedPlayer.Name)));
                         break;
                     case string command when command.StartsWith("create-"):
-                        output.Add((CommunicationChannel.Self, await CreateRoomWithResponse(connectedPlayer.RoomId, parameters)));
+                        output.Add((CommunicationChannel.Self, await CreateRoomWithResponse(connectedPlayer, parameters)));
                         break;
                     default:
                         output.Add((CommunicationChannel.Self, InvalidSyntaxErrorText));
@@ -71,17 +71,17 @@ namespace ScratchMUD.Server.Commands
             return output;
         }
 
-        private async Task<string> CreateRoomWithResponse(int currentRoomId, string[] parameters)
+        private async Task<string> CreateRoomWithResponse(ConnectedPlayer connectedPlayer, string[] parameters)
         {
             var wasCommandRecognized = true;
             switch (parameters[0].ToLower())
             {
-                case "create-north": await roomRepository.CreateNewRoom(currentRoomId, Directions.North); break;
-                case "create-south": await roomRepository.CreateNewRoom(currentRoomId, Directions.South); break;
-                case "create-east": await roomRepository.CreateNewRoom(currentRoomId, Directions.East); break;
-                case "create-west": await roomRepository.CreateNewRoom(currentRoomId, Directions.West); break;
-                case "create-up": await roomRepository.CreateNewRoom(currentRoomId, Directions.Up); break;
-                case "create-down": await roomRepository.CreateNewRoom(currentRoomId, Directions.Down); break;
+                case "create-north": await CreateNewRoom(connectedPlayer, Directions.North); break;
+                case "create-south": await CreateNewRoom(connectedPlayer, Directions.South); break;
+                case "create-east": await CreateNewRoom(connectedPlayer, Directions.East); break;
+                case "create-west": await CreateNewRoom(connectedPlayer, Directions.West); break;
+                case "create-up": await CreateNewRoom(connectedPlayer, Directions.Up); break;
+                case "create-down": await CreateNewRoom(connectedPlayer, Directions.Down); break;
                 default:
                     wasCommandRecognized = false;
                     break;
@@ -93,6 +93,12 @@ namespace ScratchMUD.Server.Commands
             }
 
             return InvalidSyntaxErrorText;
+        }
+
+        private async Task CreateNewRoom(ConnectedPlayer connectedPlayer, Directions direction)
+        {
+            await roomRepository.CreateNewRoom(connectedPlayer.RoomId, direction);
+            connectedPlayer.QueueCommand(direction.ToString());
         }
 
         private async Task<string> UpdateRoomDetailWithResponse(ConnectedPlayer connectedPlayer, string[] parameters)
