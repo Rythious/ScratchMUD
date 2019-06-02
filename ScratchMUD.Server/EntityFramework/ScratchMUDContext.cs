@@ -1,4 +1,6 @@
+﻿using System;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace ScratchMUD.Server.EntityFramework
 {
@@ -193,9 +195,6 @@ namespace ScratchMUD.Server.EntityFramework
 
             modelBuilder.Entity<NpcItem>(entity =>
             {
-                entity.HasKey(e => new { e.NpcId, e.ItemId })
-                    .HasName("PK_NpcItem_NpcId_ItemId");
-
                 entity.Property(e => e.CreatedOn).HasColumnType("datetime");
 
                 entity.HasOne(d => d.Item)
@@ -254,6 +253,12 @@ namespace ScratchMUD.Server.EntityFramework
                     .HasMaxLength(25)
                     .IsUnicode(false);
 
+                entity.HasOne(d => d.Room)
+                    .WithMany(p => p.PlayerCharacter)
+                    .HasForeignKey(d => d.RoomId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_PlayerCharacter_Room");
+
                 entity.HasOne(d => d.World)
                     .WithMany(p => p.PlayerCharacter)
                     .HasForeignKey(d => d.WorldId)
@@ -263,9 +268,6 @@ namespace ScratchMUD.Server.EntityFramework
 
             modelBuilder.Entity<PlayerCharacterItem>(entity =>
             {
-                entity.HasKey(e => new { e.PlayerCharacterId, e.ItemId })
-                    .HasName("PK_PlayerCharacterItem_PlayerCharacterId_ItemId");
-
                 entity.Property(e => e.CreatedOn).HasColumnType("datetime");
 
                 entity.HasOne(d => d.Item)
@@ -302,9 +304,6 @@ namespace ScratchMUD.Server.EntityFramework
 
             modelBuilder.Entity<RoomItem>(entity =>
             {
-                entity.HasKey(e => new { e.RoomId, e.ItemId })
-                    .HasName("PK_RoomItem_RoomId_ItemId");
-
                 entity.Property(e => e.CreatedOn).HasColumnType("datetime");
 
                 entity.HasOne(d => d.Item)
@@ -322,9 +321,6 @@ namespace ScratchMUD.Server.EntityFramework
 
             modelBuilder.Entity<RoomNpc>(entity =>
             {
-                entity.HasKey(e => new { e.RoomId, e.NpcId })
-                    .HasName("PK_RoomNpc_RoomId_NpcId");
-
                 entity.Property(e => e.CreatedOn).HasColumnType("datetime");
 
                 entity.HasOne(d => d.Npc)

@@ -1,5 +1,4 @@
 ﻿using ScratchMUD.Server.Infrastructure;
-using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
 using ScratchMUD.Server.Repositories;
 using System.Collections.Generic;
@@ -28,21 +27,15 @@ namespace ScratchMUD.Server.Commands
         public Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, params string[] parameters)
         {
             ThrowInvalidCommandSyntaxExceptionIfTooManyParameters(parameters);
-            
+
             var roomDetails = roomRepository.GetRoomWithTranslatedValues(connectedPlayer.RoomId);
 
             var exitsOutputString = BuildExitsString(roomDetails.Exits);
 
-            var output = new List<(CommunicationChannel, string)>
-            {
-                (CommunicationChannel.Self, roomDetails.Title),
-                (CommunicationChannel.Self, roomDetails.FullDescription),
-                (CommunicationChannel.Self, exitsOutputString)
-            };
+            List<(CommunicationChannel, string)> output = BuildOutputMessages(roomDetails, exitsOutputString);
 
             return Task.Run(() => output);
         }
-
         private string BuildExitsString(HashSet<(Directions, int)> exits)
         {
             var availableExits = exits.Select(e => e.Item1.ToString().ToLower()).ToList();
@@ -53,6 +46,23 @@ namespace ScratchMUD.Server.Commands
             }
 
             return $"[Exits: {string.Join(", ", availableExits)}]";
+        }
+
+        private static List<(CommunicationChannel, string)> BuildOutputMessages(Models.Room roomDetails, string exitsOutputString)
+        {
+            var output = new List<(CommunicationChannel, string)>
+            {
+                (CommunicationChannel.Self, roomDetails.Title),
+                (CommunicationChannel.Self, roomDetails.FullDescription),
+                (CommunicationChannel.Self, exitsOutputString)
+            };
+
+            if (roomDetails.Npcs != null)
+            {
+                output.AddRange(roomDetails.Npcs.Select(n => (CommunicationChannel.Self, $"{n.ShortDescription} is here.")).ToList());
+            }
+
+            return output;
         }
     }
 }

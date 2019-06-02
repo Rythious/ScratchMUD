@@ -1,4 +1,5 @@
 ﻿using ScratchMUD.Server.Models;
+using ScratchMUD.Server.Models.Constants;
 using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Repositories
@@ -9,12 +10,7 @@ namespace ScratchMUD.Server.Repositories
         Task UpdateTitle(int roomId, string title);
         Task UpdateShortDescription(int roomId, string shortDescription);
         Task UpdateFullDescription(int roomId, string fullDescription);
-        Task CreateNorthRoom(int roomId);
-        Task CreateEastRoom(int roomId);
-        Task CreateSouthRoom(int roomId);
-        Task CreateWestRoom(int roomId);
-        Task CreateUpRoom(int roomId);
-        Task CreateDownRoom(int roomId);
+        Task CreateNewRoom(int originatingRoomId, Directions directionOfNewRoom);
         int GetRoomIdByAreaAndVirtualNumber(int areaId, int virtualNumber);
     }
 }

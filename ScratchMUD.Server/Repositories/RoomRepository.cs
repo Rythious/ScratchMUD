@@ -26,6 +26,20 @@ namespace ScratchMUD.Server.Repositories
             var room = context.Room.Single(r => r.RoomId == roomId);
             var roomTranslation = context.RoomTranslation.SingleOrDefault(rt => rt.LanguageId == 1 && rt.RoomId == roomId);
             var authoringPlayerCharacter = context.PlayerCharacter.Single(pc => pc.PlayerCharacterId == room.CreatedByPlayerId);
+            var npcsInTheRoom = context.RoomNpc.Where(rn => rn.RoomId == roomId).Select(rn => rn.NpcId).ToList();
+            var npcTranslationRecords = context.NpcTranslation.Where(nt => npcsInTheRoom.Distinct().Contains(nt.NpcId)).ToList();
+
+            var npcModels = new List<Models.Npc>();
+
+            foreach (var npcId in npcsInTheRoom)
+            {
+                npcModels.Add(new Models.Npc
+                {
+                    Id = npcId,
+                    ShortDescription = npcTranslationRecords.Single(n => n.NpcId == npcId).ShortDescription,
+                    FullDescription = npcTranslationRecords.Single(n => n.NpcId == npcId).FullDescription
+                });
+            }
 
             return new Models.Room
             {
@@ -35,7 +49,8 @@ namespace ScratchMUD.Server.Repositories
                 AreaId = room.AreaId,
                 Exits = BuildExitsHashSetFromRoomData(room),
                 Author = authoringPlayerCharacter.Name,
-                Title = roomTranslation?.Title
+                Title = roomTranslation?.Title,
+                Npcs = npcModels
             };
         }
 
@@ -78,92 +93,91 @@ namespace ScratchMUD.Server.Repositories
 
         public async Task UpdateTitle(int roomId, string title)
         {
-            var room = context.RoomTranslation.Single(rt => rt.RoomId == roomId);
-            room.Title = title;
-            room.ModifiedOn = DateTime.Now;
+            RoomTranslation roomTranslation = await GetRoomTranslationRecord(roomId, createIfMissing: true);
+            roomTranslation.Title = title;
+            roomTranslation.ModifiedOn = DateTime.Now;
             await context.SaveChangesAsync();
         }
 
         public async Task UpdateShortDescription(int roomId, string shortDescription)
         {
-            var room = context.RoomTranslation.Single(rt => rt.RoomId == roomId);
-            room.ShortDescription = shortDescription;
-            room.ModifiedOn = DateTime.Now;
+            RoomTranslation roomTranslation = await GetRoomTranslationRecord(roomId, createIfMissing: true);
+            roomTranslation.ShortDescription = shortDescription;
+            roomTranslation.ModifiedOn = DateTime.Now;
             await context.SaveChangesAsync();
         }
 
         public async Task UpdateFullDescription(int roomId, string fullDescription)
         {
-            var room = context.RoomTranslation.Single(rt => rt.RoomId == roomId);
-            room.FullDescription = fullDescription;
-            room.ModifiedOn = DateTime.Now;
+            RoomTranslation roomTranslation = await GetRoomTranslationRecord(roomId, createIfMissing: true);
+            roomTranslation.FullDescription = fullDescription;
+            roomTranslation.ModifiedOn = DateTime.Now;
             await context.SaveChangesAsync();
         }
 
-        public async Task CreateNorthRoom(int roomId)
+        private async Task<RoomTranslation> GetRoomTranslationRecord(int roomId, bool createIfMissing)
         {
-            Room currentRoom = ValidateDirectionOfNewRoom(roomId, Directions.North);
+            var roomTranslation = context.RoomTranslation.SingleOrDefault(rt => rt.RoomId == roomId);
 
-            Room newRoom = await CreateNewRoom(currentRoom.AreaId, currentRoom.VirtualNumber, Directions.South);
+            if (roomTranslation == null && createIfMissing)
+            {
+                roomTranslation = await CreateRoomTranslationRecord(roomId);
+            }
 
-            currentRoom.NorthRoom = newRoom.VirtualNumber;
-
-            await context.SaveChangesAsync();
+            return roomTranslation;
         }
 
-        public async Task CreateEastRoom(int roomId)
+        private async Task<RoomTranslation> CreateRoomTranslationRecord(int roomId)
         {
-            Room currentRoom = ValidateDirectionOfNewRoom(roomId, Directions.East);
+            var newRoomTranslation = new RoomTranslation
+            {
+                FullDescription = "<FullDescription not set>",
+                ShortDescription = "<ShortDescription not set>",
+                Title = "<Title not set>",
+                CreatedOn = DateTime.Now,
+                RoomId = roomId,
+                LanguageId = 1
+            };
 
-            Room newRoom = await CreateNewRoom(currentRoom.AreaId, currentRoom.VirtualNumber, Directions.West);
-
-            currentRoom.EastRoom = newRoom.VirtualNumber;
-
+            context.Add(newRoomTranslation);
             await context.SaveChangesAsync();
+
+            return newRoomTranslation;
         }
 
-        public async Task CreateSouthRoom(int roomId)
+        public async Task CreateNewRoom(int originatingRoomId, Directions directionOfNewRoom)
         {
-            Room currentRoom = ValidateDirectionOfNewRoom(roomId, Directions.South);
+            Room currentRoom = ValidateDirectionOfNewRoom(originatingRoomId, directionOfNewRoom);
 
-            Room newRoom = await CreateNewRoom(currentRoom.AreaId, currentRoom.VirtualNumber, Directions.North);
+            var oppositeDirection = GetOppositeDirection(directionOfNewRoom);
 
-            currentRoom.SouthRoom = newRoom.VirtualNumber;
+            Room newRoom = await CreateNewRoom(currentRoom.AreaId, currentRoom.VirtualNumber, oppositeDirection);
 
-            await context.SaveChangesAsync();
-        }
-
-        public async Task CreateWestRoom(int roomId)
-        {
-            Room currentRoom = ValidateDirectionOfNewRoom(roomId, Directions.West);
-
-            Room newRoom = await CreateNewRoom(currentRoom.AreaId, currentRoom.VirtualNumber, Directions.East);
-
-            currentRoom.WestRoom = newRoom.VirtualNumber;
-
-            await context.SaveChangesAsync();
-        }
-
-        public async Task CreateUpRoom(int roomId)
-        {
-            Room currentRoom = ValidateDirectionOfNewRoom(roomId, Directions.Up);
-
-            Room newRoom = await CreateNewRoom(currentRoom.AreaId, currentRoom.VirtualNumber, Directions.Down);
-
-            currentRoom.UpRoom = newRoom.VirtualNumber;
+            switch (directionOfNewRoom)
+            {
+                case Directions.North: newRoom.NorthRoom = newRoom.VirtualNumber; break;
+                case Directions.South: newRoom.SouthRoom = newRoom.VirtualNumber; break;
+                case Directions.East: newRoom.EastRoom = newRoom.VirtualNumber; break;
+                case Directions.West: newRoom.WestRoom = newRoom.VirtualNumber; break;
+                case Directions.Up: newRoom.UpRoom = newRoom.VirtualNumber; break;
+                case Directions.Down: newRoom.DownRoom = newRoom.VirtualNumber; break;
+            }
 
             await context.SaveChangesAsync();
         }
 
-        public async Task CreateDownRoom(int roomId)
+        private Directions GetOppositeDirection(Directions directionOfNewRoom)
         {
-            Room currentRoom = ValidateDirectionOfNewRoom(roomId, Directions.Down);
-
-            Room newRoom = await CreateNewRoom(currentRoom.AreaId, currentRoom.VirtualNumber, Directions.Up);
-
-            currentRoom.DownRoom = newRoom.VirtualNumber;
-
-            await context.SaveChangesAsync();
+            switch (directionOfNewRoom)
+            {
+                case Directions.North: return Directions.South;
+                case Directions.South: return Directions.North;
+                case Directions.East: return Directions.West;
+                case Directions.West: return Directions.East;
+                case Directions.Up: return Directions.Down;
+                case Directions.Down: return Directions.Up;
+                default: throw new ArgumentException(nameof(directionOfNewRoom));
+            }
         }
 
         private Room ValidateDirectionOfNewRoom(int roomId, Directions newRoomDirection)
@@ -174,26 +188,12 @@ namespace ScratchMUD.Server.Repositories
 
             switch (newRoomDirection)
             {
-                case Directions.North:
-                    isDirectionAvailable = !currentRoom.NorthRoom.HasValue;
-                    break;
-                case Directions.East:
-                    isDirectionAvailable = !currentRoom.EastRoom.HasValue;
-                    break;
-                case Directions.South:
-                    isDirectionAvailable = !currentRoom.SouthRoom.HasValue;
-                    break;
-                case Directions.West:
-                    isDirectionAvailable = !currentRoom.WestRoom.HasValue;
-                    break;
-                case Directions.Up:
-                    isDirectionAvailable = !currentRoom.UpRoom.HasValue;
-                    break;
-                case Directions.Down:
-                    isDirectionAvailable = !currentRoom.DownRoom.HasValue;
-                    break;
-                default:
-                    break;
+                case Directions.North: isDirectionAvailable = !currentRoom.NorthRoom.HasValue; break;
+                case Directions.South: isDirectionAvailable = !currentRoom.SouthRoom.HasValue; break;
+                case Directions.East: isDirectionAvailable = !currentRoom.EastRoom.HasValue; break;
+                case Directions.West: isDirectionAvailable = !currentRoom.WestRoom.HasValue; break;
+                case Directions.Up: isDirectionAvailable = !currentRoom.UpRoom.HasValue; break;
+                case Directions.Down: isDirectionAvailable = !currentRoom.DownRoom.HasValue; break;
             }
 
             if (!isDirectionAvailable)
@@ -218,31 +218,19 @@ namespace ScratchMUD.Server.Repositories
 
             switch (originDirection)
             {
-                case Directions.North:
-                    newRoom.NorthRoom = roomNumberOfOrigin;
-                    break;
-                case Directions.East:
-                    newRoom.EastRoom = roomNumberOfOrigin;
-                    break;
-                case Directions.South:
-                    newRoom.SouthRoom = roomNumberOfOrigin;
-                    break;
-                case Directions.West:
-                    newRoom.WestRoom = roomNumberOfOrigin;
-                    break;
-                case Directions.Up:
-                    newRoom.UpRoom = roomNumberOfOrigin;
-                    break;
-                case Directions.Down:
-                    newRoom.DownRoom = roomNumberOfOrigin;
-                    break;
-                default:
-                    break;
+                case Directions.North: newRoom.NorthRoom = roomNumberOfOrigin; break;
+                case Directions.South: newRoom.SouthRoom = roomNumberOfOrigin; break;
+                case Directions.East: newRoom.EastRoom = roomNumberOfOrigin; break;
+                case Directions.West: newRoom.WestRoom = roomNumberOfOrigin; break;
+                case Directions.Up: newRoom.UpRoom = roomNumberOfOrigin; break;
+                case Directions.Down: newRoom.DownRoom = roomNumberOfOrigin; break;
             }
 
             context.Add(newRoom);
 
             await context.SaveChangesAsync();
+
+            await CreateRoomTranslationRecord(newRoom.RoomId);
 
             return newRoom;
         }

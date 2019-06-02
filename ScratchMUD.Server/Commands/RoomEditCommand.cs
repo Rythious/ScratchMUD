@@ -76,24 +76,12 @@ namespace ScratchMUD.Server.Commands
             var wasCommandRecognized = true;
             switch (parameters[0].ToLower())
             {
-                case "create-north":
-                    await roomRepository.CreateNorthRoom(currentRoomId);
-                    break;
-                case "create-east":
-                    await roomRepository.CreateEastRoom(currentRoomId);
-                    break;
-                case "create-south":
-                    await roomRepository.CreateSouthRoom(currentRoomId);
-                    break;
-                case "create-west":
-                    await roomRepository.CreateWestRoom(currentRoomId);
-                    break;
-                case "create-up":
-                    await roomRepository.CreateUpRoom(currentRoomId);
-                    break;
-                case "create-down":
-                    await roomRepository.CreateDownRoom(currentRoomId);
-                    break;
+                case "create-north": await roomRepository.CreateNewRoom(currentRoomId, Directions.North); break;
+                case "create-south": await roomRepository.CreateNewRoom(currentRoomId, Directions.South); break;
+                case "create-east": await roomRepository.CreateNewRoom(currentRoomId, Directions.East); break;
+                case "create-west": await roomRepository.CreateNewRoom(currentRoomId, Directions.West); break;
+                case "create-up": await roomRepository.CreateNewRoom(currentRoomId, Directions.Up); break;
+                case "create-down": await roomRepository.CreateNewRoom(currentRoomId, Directions.Down); break;
                 default:
                     wasCommandRecognized = false;
                     break;
