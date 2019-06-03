@@ -3,6 +3,7 @@
     public enum CommunicationChannel
     {
         Self,
+        Room,
         Everyone
     }
 }

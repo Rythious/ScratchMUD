@@ -22,7 +22,7 @@ namespace ScratchMUD.Server.Commands
 
             if (parameters.Length > 0)
             {
-                output = (CommunicationChannel.Everyone, $"{connectedPlayer.Name} says \"{string.Join(" ", parameters)}\"");
+                output = (CommunicationChannel.Room, $"{connectedPlayer.Name} says \"{string.Join(" ", parameters)}\"");
             }
             else
             {

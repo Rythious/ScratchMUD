@@ -19,12 +19,12 @@ namespace ScratchMUD.Server.HostedServices
 
         public async void TrackMinutes(object state)
         {
-            await _hubContext.Clients.All.SendAsync("ReceiveServerCreatedMessage", DateTime.Now.ToString());
+            await _hubContext.Clients.All.SendAsync("ReceiveServerCreatedMessage", "A calm breeze passes over you.");
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _timer = new Timer(TrackMinutes, null, TimeSpan.FromMilliseconds(1000 - DateTime.Now.Millisecond), TimeSpan.FromMinutes(1));
+            _timer = new Timer(TrackMinutes, null, TimeSpan.FromMilliseconds(1000 - DateTime.Now.Millisecond), TimeSpan.FromMinutes(15));
 
             return Task.CompletedTask;
         }

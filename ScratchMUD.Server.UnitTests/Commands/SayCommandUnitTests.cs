@@ -64,7 +64,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             Assert.Contains("no words", result[0].Item2, StringComparison.OrdinalIgnoreCase);
         }
 
-        [Fact(DisplayName = "ExecuteAsync => When two parameters are passed in, the parametrs and player name are included in the outgoing message to everyone")]
+        [Fact(DisplayName = "ExecuteAsync => When two parameters are passed in, the parameters and player name are included in the outgoing message to everyone")]
         public async Task ExecuteAsyncWhenTwoParametersArePassedInTheyAreBothIncludedInTheOutgoingMessageToEveryone()
         {
             //Arrange
@@ -83,7 +83,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             Assert.NotNull(result);
             Assert.True(result.Count == 1);
             Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Everyone, result[0].Item1);
+            Assert.Equal(CommunicationChannel.Room, result[0].Item1);
             Assert.IsAssignableFrom<string>(result[0].Item2);
             Assert.Contains(connectedPlayer.Name, result[0].Item2);
             Assert.Contains(firstParameter + " " + secondParameter, result[0].Item2, StringComparison.OrdinalIgnoreCase);
