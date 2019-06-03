@@ -35,6 +35,8 @@ namespace ScratchMUD.Server.Repositories
 
         public async Task<IEnumerable<(CommunicationChannel, string)>> ExecuteCommandAsync(ConnectedPlayer connectedPlayer, string command, params string[] parameters)
         {
+            command = command.ToLower();
+
             var output = new List<(CommunicationChannel, string)>();
 
             if (string.IsNullOrEmpty(command))

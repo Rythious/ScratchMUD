@@ -155,12 +155,12 @@ namespace ScratchMUD.Server.Repositories
 
             switch (directionOfNewRoom)
             {
-                case Directions.North: newRoom.NorthRoom = newRoom.VirtualNumber; break;
-                case Directions.South: newRoom.SouthRoom = newRoom.VirtualNumber; break;
-                case Directions.East: newRoom.EastRoom = newRoom.VirtualNumber; break;
-                case Directions.West: newRoom.WestRoom = newRoom.VirtualNumber; break;
-                case Directions.Up: newRoom.UpRoom = newRoom.VirtualNumber; break;
-                case Directions.Down: newRoom.DownRoom = newRoom.VirtualNumber; break;
+                case Directions.North: currentRoom.NorthRoom = newRoom.VirtualNumber; break;
+                case Directions.South: currentRoom.SouthRoom = newRoom.VirtualNumber; break;
+                case Directions.East: currentRoom.EastRoom = newRoom.VirtualNumber; break;
+                case Directions.West: currentRoom.WestRoom = newRoom.VirtualNumber; break;
+                case Directions.Up: currentRoom.UpRoom = newRoom.VirtualNumber; break;
+                case Directions.Down: currentRoom.DownRoom = newRoom.VirtualNumber; break;
             }
 
             await context.SaveChangesAsync();
