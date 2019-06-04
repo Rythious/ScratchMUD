@@ -101,6 +101,12 @@ namespace ScratchMUD.Server.Hubs
                 {
                     await Clients.Client(Context.ConnectionId).SendAsync(clientReturnMethod, outputItem.Message);
                 }
+                else if (outputItem.CommChannel == CommunicationChannel.Room)
+                {
+                    List<string> connectionsInSameRoom = playerConnections.GetConnectedPlayersInTheSameRoomAsAConnection(Context.ConnectionId);
+
+                    await Clients.Clients(connectionsInSameRoom).SendAsync(clientReturnMethod, outputItem.Message);
+                }
                 else if (outputItem.CommChannel == CommunicationChannel.Everyone)
                 {
                     await Clients.All.SendAsync(clientReturnMethod, outputItem.Message);
