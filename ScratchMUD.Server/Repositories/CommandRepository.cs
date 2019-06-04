@@ -33,7 +33,7 @@ namespace ScratchMUD.Server.Repositories
             CommandDictionary[HelpCommand.NAME] = new HelpCommand(CommandDictionary);
         }
 
-        public async Task<IEnumerable<(CommunicationChannel, string)>> ExecuteCommandAsync(ConnectedPlayer connectedPlayer, string command, params string[] parameters)
+        public async Task<IEnumerable<(CommunicationChannel, string)>> ExecuteCommandAsync(ConnectedPlayer connectedPlayer, IEnumerable<ConnectedPlayer> playersInTheRoom, string command, params string[] parameters)
         {
             var output = new List<(CommunicationChannel, string)>();
 
@@ -49,14 +49,14 @@ namespace ScratchMUD.Server.Repositories
                 throw new ArgumentException($"'{command}' is not a valid command");
             }
 
-            output.AddRange(await CommandDictionary[command].ExecuteAsync(connectedPlayer, parameters));
+            output.AddRange(await CommandDictionary[command].ExecuteAsync(connectedPlayer, playersInTheRoom, parameters));
 
             if (connectedPlayer.CommandQueueCount > 0)
             {
                 command = connectedPlayer.DequeueCommand();
                 parameters = new string[0];
 
-                output.AddRange(await ExecuteCommandAsync(connectedPlayer, command, parameters));
+                output.AddRange(await ExecuteCommandAsync(connectedPlayer, playersInTheRoom, command, parameters));
             }
 
             return output;

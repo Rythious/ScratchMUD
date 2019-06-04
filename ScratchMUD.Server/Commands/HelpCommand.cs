@@ -20,7 +20,7 @@ namespace ScratchMUD.Server.Commands
             GeneralHelp = "Returns helpful information about available commands.";
         }
 
-        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, params string[] parameters)
+        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, IEnumerable<ConnectedPlayer> playersInTheRoom, params string[] parameters)
         {
             var output = new List<(CommunicationChannel, string)>();
 

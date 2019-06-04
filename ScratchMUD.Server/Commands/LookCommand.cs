@@ -22,7 +22,7 @@ namespace ScratchMUD.Server.Commands
             MaximumParameterCount = 0;
         }
 
-        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, params string[] parameters)
+        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, IEnumerable<ConnectedPlayer> playersInTheRoom, params string[] parameters)
         {
             ThrowInvalidCommandSyntaxExceptionIfTooManyParameters(parameters);
 

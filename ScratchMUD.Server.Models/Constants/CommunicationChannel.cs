@@ -2,10 +2,6 @@
 {
     public enum CommunicationChannel
     {
-        Self,
-        Target,
-        Room,
-        RoomExcept,
         Everyone
     }
 }

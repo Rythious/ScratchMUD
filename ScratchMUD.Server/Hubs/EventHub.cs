@@ -32,10 +32,14 @@ namespace ScratchMUD.Server.Hubs
             Task.Run(() => SendMessageToProperChannel((CommunicationChannel.Everyone, $"A new client has connected on {Context.ConnectionId}.")));
 
             var availableCharacterId = playerConnections.GetAvailablePlayerCharacterId();
-            var playerCharacter = playerRepository.GetPlayerCharacter(availableCharacterId);
-            playerConnections.AddConnectedPlayer(Context.ConnectionId, new ConnectedPlayer(playerCharacter));
 
-            Task.Run(() => SendMessageToProperChannel((CommunicationChannel.Self, $"You are playing as {playerCharacter.Name}.")));
+            var playerCharacter = playerRepository.GetPlayerCharacter(availableCharacterId);
+
+            var connectedPlayer = new ConnectedPlayer(playerCharacter);
+
+            playerConnections.AddConnectedPlayer(Context.ConnectionId, connectedPlayer);
+
+            Task.Run(() => connectedPlayer.QueueMessage($"You are playing as {playerCharacter.Name}."));
 
             ExecuteClientCommand(LookCommand.NAME).GetAwaiter().GetResult();
 
@@ -62,6 +66,7 @@ namespace ScratchMUD.Server.Hubs
             try
             {
                 var player = playerConnections.GetConnectedPlayerByConnectionId(Context.ConnectionId);
+
                 var playersInRoom = playerConnections.GetConnectedPlayersInTheSameRoomAsAConnection(Context.ConnectionId);
 
                 var outputMessages = await commandRepository.ExecuteCommandAsync(player, playersInRoom, command, parameters);
@@ -102,16 +107,20 @@ namespace ScratchMUD.Server.Hubs
                 {
                     await Clients.Client(Context.ConnectionId).SendAsync(clientReturnMethod, outputItem.Message);
                 }
-                else if (outputItem.CommChannel == CommunicationChannel.Room)
-                {
-                    List<string> connectionsInSameRoom = playerConnections.GetConnectionsInTheSameRoomAsAConnection(Context.ConnectionId);
-
-                    await Clients.Clients(connectionsInSameRoom).SendAsync(clientReturnMethod, outputItem.Message);
-                }
                 else if (outputItem.CommChannel == CommunicationChannel.Everyone)
                 {
                     await Clients.All.SendAsync(clientReturnMethod, outputItem.Message);
                 }
+            }
+        }
+
+        private async Task SendAllQueuedMessages(ConnectedPlayer connectedPlayer)
+        {
+            var connectionId = playerConnections.
+
+            while (connectedPlayer.MessageQueueCount > 0)
+            {
+                await Clients.Client(Context.ConnectionId).SendAsync(clientReturnMethod, outputItem.Message);
             }
         }
     }
