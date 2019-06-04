@@ -26,7 +26,7 @@ namespace ScratchMUD.Server.Commands
 
             Name = direction.ToString();
             SyntaxHelp = direction.ToString().ToUpper();
-            GeneralHelp = $"If there is an exit to the {direction.ToString().ToLower()}, moves you to that room.";
+            GeneralHelp = $"If there is an exit in the direction of {direction.ToString().ToLower()}, moves you to that room.";
             MaximumParameterCount = 0;
         }
 
