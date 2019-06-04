@@ -1,5 +1,4 @@
 ﻿using ScratchMUD.Server.Infrastructure;
-using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,24 +30,24 @@ namespace ScratchMUD.Server.Commands
 
                 foreach (var command in availableCommands)
                 {
-                    output.Add((CommunicationChannel.Self, command));
+                    connectedPlayer.QueueMessage(command);
                 }
             }
             else if (parameters.Length == 1)
             {
                 if (commandDictionary.ContainsKey(parameters[0]))
                 {
-                    output.Add((CommunicationChannel.Self, commandDictionary[parameters[0]].SyntaxHelp));
-                    output.Add((CommunicationChannel.Self, commandDictionary[parameters[0]].GeneralHelp));
+                    connectedPlayer.QueueMessage(commandDictionary[parameters[0]].SyntaxHelp);
+                    connectedPlayer.QueueMessage(commandDictionary[parameters[0]].GeneralHelp);
                 }
                 else
                 {
-                    output.Add((CommunicationChannel.Self, $"No help found for '{parameters[0]}'."));
+                    connectedPlayer.QueueMessage($"No help found for '{parameters[0]}'.");
                 }
             }
             else
             {
-                output.Add((CommunicationChannel.Self, InvalidSyntaxErrorText));
+                connectedPlayer.QueueMessage(InvalidSyntaxErrorText);
             }
 
             return Task.Run(() => output);

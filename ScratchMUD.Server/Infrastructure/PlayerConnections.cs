@@ -37,13 +37,22 @@ namespace ScratchMUD.Server.Infrastructure
             return AvailablePlayerCharacterIds.Dequeue();
         }
 
-        public List<string> GetConnectedPlayersInTheSameRoomAsAConnection(string connectionId)
+        public List<string> GetConnectionsInTheSameRoomAsAConnection(string connectionId)
         {
             var connectedPlayer = GetConnectedPlayerByConnectionId(connectionId);
 
             var allConnectionsInSameRoom = ConnectedPlayers.Where(cp => cp.Value.RoomId == connectedPlayer.RoomId).Select(cp => cp.Key).ToList();
 
             return allConnectionsInSameRoom;
+        }
+
+        public List<ConnectedPlayer> GetConnectedPlayersInTheSameRoomAsAConnection(string connectionId)
+        {
+            var connectedPlayer = GetConnectedPlayerByConnectionId(connectionId);
+
+            var allConnectedPlayersInSameRoom = ConnectedPlayers.Where(cp => cp.Value.RoomId == connectedPlayer.RoomId).Select(cp => cp.Value).ToList();
+
+            return allConnectedPlayersInSameRoom;
         }
     }
 }

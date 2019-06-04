@@ -34,13 +34,11 @@ namespace ScratchMUD.Server.Commands
         {
             ThrowInvalidCommandSyntaxExceptionIfTooManyParameters(parameters);
 
-            var output = new List<(CommunicationChannel, string)>();
-
             var room = roomRepository.GetRoomWithTranslatedValues(connectedPlayer.RoomId);
 
             if (!room.Exits.Select(e => e.Item1).Contains(Direction))
             {
-                output.Add((CommunicationChannel.Self, $"There is no room to the {Direction.ToString().ToLower()}."));
+                connectedPlayer.QueueMessage($"There is no room to the {Direction.ToString().ToLower()}.");
             }
             else
             {
@@ -54,7 +52,7 @@ namespace ScratchMUD.Server.Commands
                 connectedPlayer.QueueCommand(LookCommand.NAME);
             }
 
-            return Task.Run(() => output);
+            return Task.Run(() => new List<(CommunicationChannel, string)>());
         }
     }
 }

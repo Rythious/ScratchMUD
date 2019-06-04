@@ -10,7 +10,6 @@ namespace ScratchMUD.Server.Commands
         string Name { get; }
         Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, params string[] parameters);
         string SyntaxHelp { get; }
-
         string GeneralHelp { get; }
     }
 }

@@ -7,6 +7,7 @@ namespace ScratchMUD.Server.Infrastructure
     {
         internal PlayerCharacter PlayerCharacter { get; set; }
         private readonly Queue<string> commandQueue = new Queue<string>();
+        private readonly Queue<string> messageQueue = new Queue<string>();
 
         public ConnectedPlayer(PlayerCharacter playerCharacter)
         {
@@ -16,6 +17,7 @@ namespace ScratchMUD.Server.Infrastructure
         internal string Name => PlayerCharacter.Name;
         internal int RoomId => PlayerCharacter.RoomId;
         internal int CommandQueueCount => commandQueue.Count;
+        internal int MessageQueueCount => messageQueue.Count;
         internal int PlayerCharacterId => PlayerCharacter.PlayerCharacterId;
 
         internal void QueueCommand(string commandName)
@@ -26,6 +28,16 @@ namespace ScratchMUD.Server.Infrastructure
         internal string DequeueCommand()
         {
             return commandQueue.Dequeue();
+        }
+
+        internal void QueueMessage(string message)
+        {
+            messageQueue.Enqueue(message);
+        }
+
+        internal string DequeueMessage()
+        {
+            return messageQueue.Dequeue();
         }
     }
 }

@@ -62,8 +62,9 @@ namespace ScratchMUD.Server.Hubs
             try
             {
                 var player = playerConnections.GetConnectedPlayerByConnectionId(Context.ConnectionId);
+                var playersInRoom = playerConnections.GetConnectedPlayersInTheSameRoomAsAConnection(Context.ConnectionId);
 
-                var outputMessages = await commandRepository.ExecuteCommandAsync(player, command, parameters);
+                var outputMessages = await commandRepository.ExecuteCommandAsync(player, playersInRoom, command, parameters);
 
                 if (string.IsNullOrEmpty(overrideClientReturnMethod))
                 {
@@ -103,7 +104,7 @@ namespace ScratchMUD.Server.Hubs
                 }
                 else if (outputItem.CommChannel == CommunicationChannel.Room)
                 {
-                    List<string> connectionsInSameRoom = playerConnections.GetConnectedPlayersInTheSameRoomAsAConnection(Context.ConnectionId);
+                    List<string> connectionsInSameRoom = playerConnections.GetConnectionsInTheSameRoomAsAConnection(Context.ConnectionId);
 
                     await Clients.Clients(connectionsInSameRoom).SendAsync(clientReturnMethod, outputItem.Message);
                 }

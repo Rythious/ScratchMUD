@@ -26,7 +26,7 @@ namespace ScratchMUD.Server.Commands
             }
             else
             {
-                output = (CommunicationChannel.Self, $"You open your mouth as if to say something, but there are no words.");
+                connectedPlayer.QueueMessage($"You open your mouth as if to say something, but there are no words.");
             }
 
             return Task.Run(() => new List<(CommunicationChannel, string)> { output });

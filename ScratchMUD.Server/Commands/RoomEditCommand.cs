@@ -42,33 +42,38 @@ namespace ScratchMUD.Server.Commands
 
         public async Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, params string[] parameters)
         {
-            var output = new List<(CommunicationChannel, string)>();
+            var output = new List<string>();
 
             if (parameters.Length == 0)
             {
-                output.Add((CommunicationChannel.Self, EnterEditingModeWithResponse(connectedPlayer.Name)));
+                output.Add(EnterEditingModeWithResponse(connectedPlayer.Name));
             }
             else if (parameters.Length == 1)
             {
                 switch (parameters[0].ToLower())
                 {
                     case "exit":
-                        output.Add((CommunicationChannel.Self, ExitEditingModeWithResponse(connectedPlayer.Name)));
+                        output.Add(ExitEditingModeWithResponse(connectedPlayer.Name));
                         break;
                     case string command when command.StartsWith("create-"):
-                        output.Add((CommunicationChannel.Self, await CreateRoomWithResponse(connectedPlayer, parameters)));
+                        output.Add(await CreateRoomWithResponse(connectedPlayer, parameters));
                         break;
                     default:
-                        output.Add((CommunicationChannel.Self, InvalidSyntaxErrorText));
+                        output.Add(InvalidSyntaxErrorText);
                         break;
                 }
             }
             else //parameters.Length > 1
             {
-                output.Add((CommunicationChannel.Self, await UpdateRoomDetailWithResponse(connectedPlayer, parameters)));
+                output.Add(await UpdateRoomDetailWithResponse(connectedPlayer, parameters));
             }
 
-            return output;
+            foreach (var message in output)
+            {
+                connectedPlayer.QueueMessage(message);
+            }
+
+            return new List<(CommunicationChannel, string)>();
         }
 
         private async Task<string> CreateRoomWithResponse(ConnectedPlayer connectedPlayer, string[] parameters)
