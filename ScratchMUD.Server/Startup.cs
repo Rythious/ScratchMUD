@@ -36,6 +36,7 @@ namespace ScratchMUD.Server
             services.AddScoped<IPlayerRepository, PlayerRepository>();
             services.AddSingleton<EditingState>();
             services.AddSingleton<IPlayerConnections, PlayerConnections>();
+            services.AddSingleton<ISpawnedElements, SpawnedElements>();
             services.AddDbContext<ScratchMUDContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("ScratchMudServer"))
             );
