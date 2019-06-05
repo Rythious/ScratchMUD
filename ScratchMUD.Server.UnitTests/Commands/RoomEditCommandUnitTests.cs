@@ -6,6 +6,7 @@ using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models.Constants;
 using ScratchMUD.Server.Repositories;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -73,16 +74,14 @@ namespace ScratchMUD.Server.UnitTests.Commands
             mockEditingState.Setup(es => es.AddPlayerEditor(connectedPlayer.Name, EditType.Room)).Verifiable();
 
             //Act
-            var result = await roomEditCommand.ExecuteAsync(connectedPlayer);
+            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer> { connectedPlayer });
 
             //Assert
             mockEditingState.VerifyAll();
             Assert.NotNull(result);
-            Assert.True(result.Count == 1);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Contains("you are editing", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+            Assert.True(result.Count == 0);
+            Assert.True(connectedPlayer.MessageQueueCount == 1);
+            Assert.Contains("you are editing", connectedPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact(DisplayName = "ExecuteAsync => When passed no parameters and the player is already editing, a message is returned stating they are already editing")]
@@ -93,16 +92,14 @@ namespace ScratchMUD.Server.UnitTests.Commands
             mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(connectedPlayer.Name, out editType)).Returns(true);
 
             //Act
-            var result = await roomEditCommand.ExecuteAsync(connectedPlayer);
+            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer> { connectedPlayer });
 
             //Assert
             mockEditingState.VerifyAll();
             Assert.NotNull(result);
-            Assert.True(result.Count == 1);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Contains("already editing", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+            Assert.True(result.Count == 0);
+            Assert.True(connectedPlayer.MessageQueueCount == 1);
+            Assert.Contains("already editing", connectedPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact(DisplayName = "ExecuteAsync => When passed one Exit parameter, editing state is called to remove the player and a message is returned")]
@@ -112,46 +109,40 @@ namespace ScratchMUD.Server.UnitTests.Commands
             mockEditingState.Setup(es => es.RemovePlayerEditor(connectedPlayer.Name)).Verifiable();
 
             //Act
-            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, "exit");
+            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer> { connectedPlayer }, "exit");
 
             //Assert
             mockEditingState.VerifyAll();
             Assert.NotNull(result);
-            Assert.True(result.Count == 1);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Contains("no longer editing", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+            Assert.True(result.Count == 0);
+            Assert.True(connectedPlayer.MessageQueueCount == 1);
+            Assert.Contains("no longer editing", connectedPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact(DisplayName = "ExecuteAsync => When passed one parameter that does not match a handled case, an error message is returned")]
         public async Task ExecuteAsyncWhenPassedOneParameterThatDoesNotMatchAHandledCaseAnErrorMessageIsReturned()
         {
             //Arrange & Act
-            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, "purple");
+            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer> { connectedPlayer }, "purple");
 
             //Assert
             Assert.NotNull(result);
-            Assert.True(result.Count == 1);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Contains("invalid syntax", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+            Assert.True(result.Count == 0);
+            Assert.True(connectedPlayer.MessageQueueCount == 1);
+            Assert.Contains("invalid syntax", connectedPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact(DisplayName = "ExecuteAsync => When passed more than one parameter and the first is not a valid action, an error message is returned")]
         public async Task ExecuteAsyncWhenPassedMoreThanOneParameterAndTheFirstIsNotAValidActionAnErrorMessageIsReturned()
         {
             //Arrange & Act
-            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, "one", "two");
+            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer> { connectedPlayer }, "one", "two");
 
             //Assert
             Assert.NotNull(result);
-            Assert.True(result.Count == 1);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Contains("invalid syntax", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+            Assert.True(result.Count == 0);
+            Assert.True(connectedPlayer.MessageQueueCount == 1);
+            Assert.Contains("invalid syntax", connectedPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact(DisplayName = "ExecuteAsync => When passed more than one parameter and the first is a valid action but the player is not editing, an error message is returned")]
@@ -162,16 +153,14 @@ namespace ScratchMUD.Server.UnitTests.Commands
             mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(connectedPlayer.Name, out editType)).Returns(false);
 
             //Act
-            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, "title", "two");
+            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer> { connectedPlayer }, "title", "two");
 
             //Assert
             mockEditingState.VerifyAll();
             Assert.NotNull(result);
-            Assert.True(result.Count == 1);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Contains("room edit mode", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+            Assert.True(result.Count == 0);
+            Assert.True(connectedPlayer.MessageQueueCount == 1);
+            Assert.Contains("room edit mode", connectedPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact(DisplayName = "ExecuteAsync => When passed more than one parameter and the first is a title action the correct room repository method is called with the correct value")]
@@ -187,17 +176,15 @@ namespace ScratchMUD.Server.UnitTests.Commands
                 .Returns(Task.CompletedTask);
 
             //Act
-            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, testParameters);
+            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer> { connectedPlayer }, testParameters);
 
             //Assert
             mockEditingState.VerifyAll();
             mockRoomRepository.VerifyAll();
             Assert.NotNull(result);
-            Assert.True(result.Count == 1);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Contains("room updated", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+            Assert.True(result.Count == 0);
+            Assert.True(connectedPlayer.MessageQueueCount == 1);
+            Assert.Contains("room updated", connectedPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact(DisplayName = "ExecuteAsync => When passed more than one parameter and the first is a short description action the correct room repository method is called with the correct value")]
@@ -213,17 +200,15 @@ namespace ScratchMUD.Server.UnitTests.Commands
                 .Returns(Task.CompletedTask);
 
             //Act
-            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, testParameters);
+            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer> { connectedPlayer }, testParameters);
 
             //Assert
             mockEditingState.VerifyAll();
             mockRoomRepository.VerifyAll();
             Assert.NotNull(result);
-            Assert.True(result.Count == 1);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Contains("room updated", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+            Assert.True(result.Count == 0);
+            Assert.True(connectedPlayer.MessageQueueCount == 1);
+            Assert.Contains("room updated", connectedPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact(DisplayName = "ExecuteAsync => When passed more than one parameter and the first is a full description action the correct room repository method is called with the correct value")]
@@ -239,17 +224,15 @@ namespace ScratchMUD.Server.UnitTests.Commands
                 .Returns(Task.CompletedTask);
 
             //Act
-            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, testParameters);
+            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer> { connectedPlayer }, testParameters);
 
             //Assert
             mockEditingState.VerifyAll();
             mockRoomRepository.VerifyAll();
             Assert.NotNull(result);
-            Assert.True(result.Count == 1);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Contains("room updated", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+            Assert.True(result.Count == 0);
+            Assert.True(connectedPlayer.MessageQueueCount == 1);
+            Assert.Contains("room updated", connectedPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact(DisplayName = "ExecuteAsync => When passed more than one parameter and the room repository is called for an update but throws an exception, an error is returned with that exception text")]
@@ -265,17 +248,15 @@ namespace ScratchMUD.Server.UnitTests.Commands
                 .Throws(new DbUpdateException("thrown from database", (Exception)null));
 
             //Act
-            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, testParameters);
+            var result = await roomEditCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer> { connectedPlayer }, testParameters);
 
             //Assert
             mockEditingState.VerifyAll();
             mockRoomRepository.VerifyAll();
             Assert.NotNull(result);
-            Assert.True(result.Count == 1);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Contains("exception", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+            Assert.True(result.Count == 0);
+            Assert.True(connectedPlayer.MessageQueueCount == 1);
+            Assert.Contains("exception", connectedPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
         }
     }
 }

@@ -29,7 +29,7 @@ namespace ScratchMUD.Server.UnitTests.Repositories
             var connectedPlayer = new ConnectedPlayer(new PlayerCharacter());
 
             //Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentNullException>(() => commandRespository.ExecuteCommandAsync(connectedPlayer, null));
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(() => commandRespository.ExecuteCommandAsync(connectedPlayer, new List<ConnectedPlayer>(), null));
             Assert.Contains("cannot be null", exception.Message);
         }
 
@@ -40,7 +40,7 @@ namespace ScratchMUD.Server.UnitTests.Repositories
             var connectedPlayer = new ConnectedPlayer(new PlayerCharacter());
 
             //Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentNullException>(() => commandRespository.ExecuteCommandAsync(connectedPlayer, string.Empty));
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(() => commandRespository.ExecuteCommandAsync(connectedPlayer, new List<ConnectedPlayer>(), string.Empty));
             Assert.Contains("cannot be null", exception.Message);
         }
 
@@ -53,7 +53,7 @@ namespace ScratchMUD.Server.UnitTests.Repositories
             const string NOT_A_VALID_COMMAND = "not_a_valid_command";
 
             //Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => commandRespository.ExecuteCommandAsync(connectedPlayer, NOT_A_VALID_COMMAND));
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => commandRespository.ExecuteCommandAsync(connectedPlayer, new List<ConnectedPlayer>(), NOT_A_VALID_COMMAND));
             Assert.Contains("not a valid command", exception.Message);
             Assert.Contains(NOT_A_VALID_COMMAND, exception.Message);
         }
@@ -67,11 +67,11 @@ namespace ScratchMUD.Server.UnitTests.Repositories
             const string VALID_COMMAND = "say";
 
             //Act
-            var output = await commandRespository.ExecuteCommandAsync(connectedPlayer, VALID_COMMAND);
+            var output = await commandRespository.ExecuteCommandAsync(connectedPlayer, new List<ConnectedPlayer>(), VALID_COMMAND);
 
             //Assert
-            Assert.NotNull(output);
-            Assert.Single(output);
+            Assert.Empty(output);
+            Assert.True(connectedPlayer.MessageQueueCount == 1);
         }
 
         [Fact(DisplayName = "ExecuteCommandAsync => When provided a valid command, and there is a queued command, both commands are executed")]
@@ -85,11 +85,11 @@ namespace ScratchMUD.Server.UnitTests.Repositories
             connectedPlayer.QueueCommand(VALID_COMMAND);
 
             //Act
-            var output = await commandRespository.ExecuteCommandAsync(connectedPlayer, VALID_COMMAND);
+            var output = await commandRespository.ExecuteCommandAsync(connectedPlayer, new List<ConnectedPlayer>(), VALID_COMMAND);
 
             //Assert
-            Assert.NotNull(output);
-            Assert.True(new List<(CommunicationChannel, string)>(output).Count == 2);
+            Assert.Empty(output);
+            Assert.True(connectedPlayer.MessageQueueCount == 2);
         }
     }
 }

@@ -76,26 +76,23 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var connectedPlayer = new ConnectedPlayer(new PlayerCharacter());
 
             //Act
-            var result = await lookCommand.ExecuteAsync(connectedPlayer);
+            var result = await lookCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer> { connectedPlayer });
 
             //Assert
             mockRoomRepository.VerifyAll();
             Assert.NotNull(result);
-            Assert.True(result.Count == 3);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.Equal(room.Title, result[0].Item2);
-            Assert.Equal(CommunicationChannel.Self, result[1].Item1);
-            Assert.Equal(room.FullDescription, result[1].Item2);
-            Assert.Equal(CommunicationChannel.Self, result[2].Item1);
-            Assert.Contains("Exits", result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains(Directions.East.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains(Directions.West.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains(Directions.Down.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.North.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.South.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.Up.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
+            Assert.True(result.Count == 0);
+            Assert.True(connectedPlayer.MessageQueueCount == 3);
+            Assert.Equal(room.Title, connectedPlayer.DequeueMessage());
+            Assert.Equal(room.FullDescription, connectedPlayer.DequeueMessage());
+            var exits = connectedPlayer.DequeueMessage();
+            Assert.Contains("Exits", exits, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(Directions.East.ToString(), exits, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(Directions.West.ToString(), exits, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(Directions.Down.ToString(), exits, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(Directions.North.ToString(), exits, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(Directions.South.ToString(), exits, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(Directions.Up.ToString(), exits, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact(DisplayName = "ExecuteAsync => When there are non player characters in the room, returns a line for each with its short description")]
@@ -128,30 +125,25 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var connectedPlayer = new ConnectedPlayer(new PlayerCharacter());
 
             //Act
-            var result = await lookCommand.ExecuteAsync(connectedPlayer);
+            var result = await lookCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer>());
 
             //Assert
             mockRoomRepository.VerifyAll();
             Assert.NotNull(result);
-            Assert.True(result.Count == 5);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.Equal(room.Title, result[0].Item2);
-            Assert.Equal(CommunicationChannel.Self, result[1].Item1);
-            Assert.Equal(room.FullDescription, result[1].Item2);
-            Assert.Equal(CommunicationChannel.Self, result[2].Item1);
-            Assert.Contains("Exits", result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains(Directions.East.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.West.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.Down.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.North.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.South.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.Up.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.Equal(CommunicationChannel.Self, result[3].Item1);
-            Assert.Contains(npc1.ShortDescription, result[3].Item2);
-            Assert.Equal(CommunicationChannel.Self, result[4].Item1);
-            Assert.Contains(npc2.ShortDescription, result[4].Item2);
+            Assert.True(result.Count == 0);
+            Assert.True(connectedPlayer.MessageQueueCount == 5);
+            Assert.Equal(room.Title, connectedPlayer.DequeueMessage());
+            Assert.Equal(room.FullDescription, connectedPlayer.DequeueMessage());
+            var exits = connectedPlayer.DequeueMessage();
+            Assert.Contains("Exits", exits, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(Directions.East.ToString(), exits, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(Directions.West.ToString(), exits, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(Directions.Down.ToString(), exits, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(Directions.North.ToString(), exits, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(Directions.South.ToString(), exits, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(Directions.Up.ToString(), exits, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(npc1.ShortDescription, connectedPlayer.DequeueMessage());
+            Assert.Contains(npc2.ShortDescription, connectedPlayer.DequeueMessage());
         }
 
         [Fact(DisplayName = "ExecuteAsync => When a room has no exits, the Exits string has none")]
@@ -168,23 +160,24 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var connectedPlayer = new ConnectedPlayer(new PlayerCharacter());
 
             //Act
-            var result = await lookCommand.ExecuteAsync(connectedPlayer);
+            var result = await lookCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer> { connectedPlayer });
 
             //Assert
             mockRoomRepository.VerifyAll();
             Assert.NotNull(result);
-            Assert.True(result.Count == 3);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[2].Item1);
-            Assert.IsAssignableFrom<string>(result[2].Item2);
-            Assert.Equal(CommunicationChannel.Self, result[2].Item1);
-            Assert.Contains("Exits", result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains("none", result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.East.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.West.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.Down.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.North.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.South.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.Up.ToString(), result[2].Item2, StringComparison.OrdinalIgnoreCase);
+            Assert.True(result.Count == 0);
+            Assert.True(connectedPlayer.MessageQueueCount == 3);
+            connectedPlayer.DequeueMessage();
+            connectedPlayer.DequeueMessage();
+            var exits = connectedPlayer.DequeueMessage();
+            Assert.Contains("Exits", exits, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("none", exits, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(Directions.East.ToString(), exits, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(Directions.West.ToString(), exits, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(Directions.Down.ToString(), exits, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(Directions.North.ToString(), exits, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(Directions.South.ToString(), exits, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(Directions.Up.ToString(), exits, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact(DisplayName = "ExecuteAsync => When provided with any parameters, throws InvalidCommandSyntaxException")]
@@ -196,7 +189,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var tooManyParameters = new string[1] { "one" };
 
             //Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidCommandSyntaxException>(() => lookCommand.ExecuteAsync(connectedPlayer, tooManyParameters));
+            var exception = await Assert.ThrowsAsync<InvalidCommandSyntaxException>(() => lookCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer>(), tooManyParameters));
         }
     }
 }

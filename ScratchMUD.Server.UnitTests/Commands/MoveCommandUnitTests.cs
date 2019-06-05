@@ -70,7 +70,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var tooManyParameters = new string[1] { "one" };
 
             //Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidCommandSyntaxException>(() => northMoveCommand.ExecuteAsync(connectedPlayer, tooManyParameters));
+            var exception = await Assert.ThrowsAsync<InvalidCommandSyntaxException>(() => northMoveCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer>(), tooManyParameters));
         }
 
         [Fact(DisplayName = "ExecuteAsync => Returns an error message when a room does not exist in that direction")]
@@ -87,17 +87,16 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var connectedPlayer = new ConnectedPlayer(new PlayerCharacter());
 
             //Act
-            var result = await northMoveCommand.ExecuteAsync(connectedPlayer);
+            var result = await northMoveCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer> { connectedPlayer });
 
             //Assert
             mockRoomRepository.VerifyAll();
             Assert.NotNull(result);
-            Assert.True(result.Count == 1);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Contains("no room", result[0].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains(DIRECTION.ToString(), result[0].Item2, StringComparison.OrdinalIgnoreCase);
+            Assert.True(result.Count == 0);
+            Assert.True(connectedPlayer.MessageQueueCount == 1);
+            var message = connectedPlayer.DequeueMessage();
+            Assert.Contains("no room", message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(DIRECTION.ToString(), message, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact(DisplayName = "ExecuteAsync => Updates the room of the player, updates the player repository record, and queues a command")]
@@ -139,7 +138,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
             mockPlayerRepository.Setup(pr => pr.GetPlayerCharacter(connectedPlayer.PlayerCharacterId)).Returns(new PlayerCharacter());
             
             //Act
-            var result = await northMoveCommand.ExecuteAsync(connectedPlayer);
+            var result = await northMoveCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer>());
 
             //Assert
             mockRoomRepository.VerifyAll();

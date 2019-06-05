@@ -1,8 +1,8 @@
 using ScratchMUD.Server.Commands;
 using ScratchMUD.Server.EntityFramework;
 using ScratchMUD.Server.Infrastructure;
-using ScratchMUD.Server.Models.Constants;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -52,16 +52,17 @@ namespace ScratchMUD.Server.UnitTests.Commands
         [Fact(DisplayName = "ExecuteAsync => When no parameters are sent in, a message to the player is returned indicating no words")]
         public async Task ExecuteAsyncWhenNoParametersAreSentInAMessageToThePlayerIsReturnedIndicatingNoWords()
         {
-            //Arrange & Act
-            var result = await sayCommand.ExecuteAsync(new ConnectedPlayer(new PlayerCharacter()));
+            //Arrange
+            var connectedPlayer = new ConnectedPlayer(new PlayerCharacter());
+
+            //Act
+            var result = await sayCommand.ExecuteAsync(connectedPlayer, new List<ConnectedPlayer>());
 
             //Assert
             Assert.NotNull(result);
-            Assert.True(result.Count == 1);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Contains("no words", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+            Assert.True(result.Count == 0);
+            Assert.True(connectedPlayer.MessageQueueCount == 1);
+            Assert.Contains("no words", connectedPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact(DisplayName = "ExecuteAsync => When two parameters are passed in, the parameters and player name are included in the outgoing message to everyone")]
@@ -72,21 +73,27 @@ namespace ScratchMUD.Server.UnitTests.Commands
             {
                 Name = "Trouble"
             });
-            
+
+            var listeningPlayer = new ConnectedPlayer(new PlayerCharacter());
+
+            var playersInTheRoom = new List<ConnectedPlayer> { connectedPlayer, listeningPlayer };
+
             var firstParameter = "one";
             var secondParameter = "two";
 
             //Act
-            var result = await sayCommand.ExecuteAsync(connectedPlayer, firstParameter, secondParameter);
+            var result = await sayCommand.ExecuteAsync(connectedPlayer, playersInTheRoom, firstParameter, secondParameter);
 
             //Assert
             Assert.NotNull(result);
-            Assert.True(result.Count == 1);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Room, result[0].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Contains(connectedPlayer.Name, result[0].Item2);
-            Assert.Contains(firstParameter + " " + secondParameter, result[0].Item2, StringComparison.OrdinalIgnoreCase);
+            Assert.True(result.Count == 0);
+            Assert.True(connectedPlayer.MessageQueueCount == 1);
+            Assert.True(listeningPlayer.MessageQueueCount == 1);
+            var message = connectedPlayer.DequeueMessage();
+            Assert.Contains(connectedPlayer.Name, message);
+            Assert.Contains(firstParameter + " " + secondParameter, message, StringComparison.OrdinalIgnoreCase);
+            var listeningPlayersMessage = listeningPlayer.DequeueMessage();
+            Assert.Equal(listeningPlayersMessage, message);
         }
     }
 }

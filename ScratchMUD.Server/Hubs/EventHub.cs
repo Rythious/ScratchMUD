@@ -63,10 +63,10 @@ namespace ScratchMUD.Server.Hubs
                 overrideClientReturnMethod = "ReceiveRoomMessage";
             }
 
+            var player = playerConnections.GetConnectedPlayerByConnectionId(Context.ConnectionId);
+
             try
             {
-                var player = playerConnections.GetConnectedPlayerByConnectionId(Context.ConnectionId);
-
                 var playersInRoom = playerConnections.GetConnectedPlayersInTheSameRoomAsAConnection(Context.ConnectionId);
 
                 var outputMessages = await commandRepository.ExecuteCommandAsync(player, playersInRoom, command, parameters);
@@ -79,18 +79,20 @@ namespace ScratchMUD.Server.Hubs
                 {
                     await SendMessagesToProperChannels(outputMessages, overrideClientReturnMethod);
                 }
+
+                playersInRoom.ForEach(async p => await SendAllQueuedMessages(p));
             }
             catch (ArgumentException ex)
             {
-                var output = (CommunicationChannel.Self, ex.Message);
+                player.QueueMessage(ex.Message);
 
-                await SendMessagesToProperChannels(new List<(CommunicationChannel CommChannel, string Message)> { output });
+                await SendAllQueuedMessages(player);
             }
             catch (InvalidCommandSyntaxException ex)
             {
-                var output = (CommunicationChannel.Self, ex.Message);
+                player.QueueMessage(ex.Message);
 
-                await SendMessagesToProperChannels(new List<(CommunicationChannel CommChannel, string Message)> { output });
+                await SendAllQueuedMessages(player);
             }
         }
 
@@ -103,11 +105,7 @@ namespace ScratchMUD.Server.Hubs
         {
             foreach (var outputItem in outputMessages)
             {
-                if (outputItem.CommChannel == CommunicationChannel.Self)
-                {
-                    await Clients.Client(Context.ConnectionId).SendAsync(clientReturnMethod, outputItem.Message);
-                }
-                else if (outputItem.CommChannel == CommunicationChannel.Everyone)
+                if (outputItem.CommChannel == CommunicationChannel.Everyone)
                 {
                     await Clients.All.SendAsync(clientReturnMethod, outputItem.Message);
                 }
@@ -116,11 +114,13 @@ namespace ScratchMUD.Server.Hubs
 
         private async Task SendAllQueuedMessages(ConnectedPlayer connectedPlayer)
         {
-            var connectionId = playerConnections.
+            var connectionId = playerConnections.GetConnectionOfConnectedPlayer(connectedPlayer);
 
             while (connectedPlayer.MessageQueueCount > 0)
             {
-                await Clients.Client(Context.ConnectionId).SendAsync(clientReturnMethod, outputItem.Message);
+                var message = connectedPlayer.DequeueMessage();
+
+                await Clients.Client(connectionId).SendAsync("ReceiveServerCreatedMessage", message);
             }
         }
     }
