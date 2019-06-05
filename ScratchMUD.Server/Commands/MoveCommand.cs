@@ -30,15 +30,15 @@ namespace ScratchMUD.Server.Commands
             MaximumParameterCount = 0;
         }
 
-        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, IEnumerable<ConnectedPlayer> playersInTheRoom, params string[] parameters)
+        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(RoomContext roomContext, params string[] parameters)
         {
             ThrowInvalidCommandSyntaxExceptionIfTooManyParameters(parameters);
 
-            var room = roomRepository.GetRoomWithTranslatedValues(connectedPlayer.RoomId);
+            var room = roomRepository.GetRoomWithTranslatedValues(roomContext.CurrentCommandingPlayer.RoomId);
 
             if (!room.Exits.Select(e => e.Item1).Contains(Direction))
             {
-                connectedPlayer.QueueMessage($"There is no room to the {Direction.ToString().ToLower()}.");
+                roomContext.CurrentCommandingPlayer.QueueMessage($"There is no room to the {Direction.ToString().ToLower()}.");
             }
             else
             {
@@ -46,10 +46,10 @@ namespace ScratchMUD.Server.Commands
 
                 var newRoomId = roomRepository.GetRoomIdByAreaAndVirtualNumber(room.AreaId, virtualNumberOfNewRoom);
 
-                playerRepository.UpdateRoomId(connectedPlayer.PlayerCharacterId, newRoomId).GetAwaiter().GetResult();
-                connectedPlayer.PlayerCharacter = playerRepository.GetPlayerCharacter(connectedPlayer.PlayerCharacterId);
+                playerRepository.UpdateRoomId(roomContext.CurrentCommandingPlayer.PlayerCharacterId, newRoomId).GetAwaiter().GetResult();
+                roomContext.CurrentCommandingPlayer.PlayerCharacter = playerRepository.GetPlayerCharacter(roomContext.CurrentCommandingPlayer.PlayerCharacterId);
 
-                connectedPlayer.QueueCommand(LookCommand.NAME);
+                roomContext.CurrentCommandingPlayer.QueueCommand(LookCommand.NAME);
             }
 
             return Task.Run(() => new List<(CommunicationChannel, string)>());

@@ -22,11 +22,11 @@ namespace ScratchMUD.Server.Commands
             MaximumParameterCount = 0;
         }
 
-        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, IEnumerable<ConnectedPlayer> playersInTheRoom, params string[] parameters)
+        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(RoomContext roomContext, params string[] parameters)
         {
             ThrowInvalidCommandSyntaxExceptionIfTooManyParameters(parameters);
 
-            var roomDetails = roomRepository.GetRoomWithTranslatedValues(connectedPlayer.RoomId);
+            var roomDetails = roomRepository.GetRoomWithTranslatedValues(roomContext.CurrentCommandingPlayer.RoomId);
 
             var exitsOutputString = BuildExitsString(roomDetails.Exits);
 
@@ -34,7 +34,7 @@ namespace ScratchMUD.Server.Commands
 
             foreach (var message in output)
             {
-                connectedPlayer.QueueMessage(message);
+                roomContext.CurrentCommandingPlayer.QueueMessage(message);
             }
 
             return Task.Run(() => new List<(CommunicationChannel, string)>());

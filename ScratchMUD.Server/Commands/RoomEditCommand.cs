@@ -40,23 +40,23 @@ namespace ScratchMUD.Server.Commands
             GeneralHelp = "If the user has sufficient editing permissions for the current area, they will enter editing mode of their current room.  The Exit subcommand will exit this mode.";
         }
 
-        public async Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, IEnumerable<ConnectedPlayer> playersInTheRoom, params string[] parameters)
+        public async Task<List<(CommunicationChannel, string)>> ExecuteAsync(RoomContext roomContext, params string[] parameters)
         {
             var output = new List<string>();
 
             if (parameters.Length == 0)
             {
-                output.Add(EnterEditingModeWithResponse(connectedPlayer.Name));
+                output.Add(EnterEditingModeWithResponse(roomContext.CurrentCommandingPlayer.Name));
             }
             else if (parameters.Length == 1)
             {
                 switch (parameters[0].ToLower())
                 {
                     case "exit":
-                        output.Add(ExitEditingModeWithResponse(connectedPlayer.Name));
+                        output.Add(ExitEditingModeWithResponse(roomContext.CurrentCommandingPlayer.Name));
                         break;
                     case string command when command.StartsWith("create-"):
-                        output.Add(await CreateRoomWithResponse(connectedPlayer, parameters));
+                        output.Add(await CreateRoomWithResponse(roomContext.CurrentCommandingPlayer, parameters));
                         break;
                     default:
                         output.Add(InvalidSyntaxErrorText);
@@ -65,12 +65,12 @@ namespace ScratchMUD.Server.Commands
             }
             else //parameters.Length > 1
             {
-                output.Add(await UpdateRoomDetailWithResponse(connectedPlayer, parameters));
+                output.Add(await UpdateRoomDetailWithResponse(roomContext.CurrentCommandingPlayer, parameters));
             }
 
             foreach (var message in output)
             {
-                connectedPlayer.QueueMessage(message);
+                roomContext.CurrentCommandingPlayer.QueueMessage(message);
             }
 
             return new List<(CommunicationChannel, string)>();

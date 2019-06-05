@@ -1,4 +1,6 @@
 ﻿using ScratchMUD.Server.Exceptions;
+using ScratchMUD.Server.Infrastructure;
+using System.Linq;
 
 namespace ScratchMUD.Server.Commands
 {
@@ -17,6 +19,25 @@ namespace ScratchMUD.Server.Commands
             {
                 throw new InvalidCommandSyntaxException(InvalidSyntaxErrorText);
             }
+        }
+
+        protected ConnectedPlayer AttemptToGetTargetFromPlayersInTheRoom(string targetSelector, RoomContext roomContext)
+        {
+            if (targetSelector.ToLower() == "self")
+            {
+                return roomContext.CurrentCommandingPlayer;
+            }
+
+            var firstTarget = roomContext.AllPlayersInTheRoom.FirstOrDefault(pc => pc.Name.StartsWith(targetSelector));
+
+            return firstTarget;
+        }
+
+        protected Models.Npc AttemptToGetTargetFromNpcsInTheRoom(string targetSelector, RoomContext roomContext)
+        {
+            var firstTarget = roomContext.NpcsInTheRoom.FirstOrDefault(n => n.ShortDescription.StartsWith(targetSelector));
+
+            return firstTarget;
         }
     }
 }

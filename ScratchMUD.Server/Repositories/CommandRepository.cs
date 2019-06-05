@@ -27,13 +27,14 @@ namespace ScratchMUD.Server.Repositories
                 [Directions.South.ToString().ToLower()] = new MoveCommand(Directions.South, roomRepository, playerRepository),
                 [Directions.West.ToString().ToLower()] = new MoveCommand(Directions.West, roomRepository, playerRepository),
                 [Directions.Up.ToString().ToLower()] = new MoveCommand(Directions.Up, roomRepository, playerRepository),
-                [Directions.Down.ToString().ToLower()] = new MoveCommand(Directions.Down, roomRepository, playerRepository)
+                [Directions.Down.ToString().ToLower()] = new MoveCommand(Directions.Down, roomRepository, playerRepository),
+                [PokeCommand.NAME] = new PokeCommand()
             };
 
             CommandDictionary[HelpCommand.NAME] = new HelpCommand(CommandDictionary);
         }
 
-        public async Task<IEnumerable<(CommunicationChannel, string)>> ExecuteCommandAsync(ConnectedPlayer connectedPlayer, IEnumerable<ConnectedPlayer> playersInTheRoom, string command, params string[] parameters)
+        public async Task<IEnumerable<(CommunicationChannel, string)>> ExecuteCommandAsync(RoomContext roomContext, string command, params string[] parameters)
         {
             var output = new List<(CommunicationChannel, string)>();
 
@@ -49,14 +50,14 @@ namespace ScratchMUD.Server.Repositories
                 throw new ArgumentException($"'{command}' is not a valid command");
             }
 
-            output.AddRange(await CommandDictionary[command].ExecuteAsync(connectedPlayer, playersInTheRoom, parameters));
+            output.AddRange(await CommandDictionary[command].ExecuteAsync(roomContext, parameters));
 
-            if (connectedPlayer.CommandQueueCount > 0)
+            if (roomContext.CurrentCommandingPlayer.CommandQueueCount > 0)
             {
-                command = connectedPlayer.DequeueCommand();
+                command = roomContext.CurrentCommandingPlayer.DequeueCommand();
                 parameters = new string[0];
 
-                output.AddRange(await ExecuteCommandAsync(connectedPlayer, playersInTheRoom, command, parameters));
+                output.AddRange(await ExecuteCommandAsync(roomContext, command, parameters));
             }
 
             return output;

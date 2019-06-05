@@ -6,6 +6,7 @@ using ScratchMUD.Server.Models.Constants;
 using ScratchMUD.Server.Repositories;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Hubs
@@ -64,12 +65,17 @@ namespace ScratchMUD.Server.Hubs
             }
 
             var player = playerConnections.GetConnectedPlayerByConnectionId(Context.ConnectionId);
+            var playersInRoom = playerConnections.GetConnectedPlayersInTheSameRoomAsAConnection(Context.ConnectionId);
+
+            var roomContext = new RoomContext
+            {
+                CurrentCommandingPlayer = player,
+                OtherPlayersInTheRoom = playersInRoom.Except(new List<ConnectedPlayer> { player })
+            };
 
             try
             {
-                var playersInRoom = playerConnections.GetConnectedPlayersInTheSameRoomAsAConnection(Context.ConnectionId);
-
-                var outputMessages = await commandRepository.ExecuteCommandAsync(player, playersInRoom, command, parameters);
+                var outputMessages = await commandRepository.ExecuteCommandAsync(roomContext, command, parameters);
 
                 if (string.IsNullOrEmpty(overrideClientReturnMethod))
                 {
@@ -80,19 +86,19 @@ namespace ScratchMUD.Server.Hubs
                     await SendMessagesToProperChannels(outputMessages, overrideClientReturnMethod);
                 }
 
-                playersInRoom.ForEach(async p => await SendAllQueuedMessages(p));
+                roomContext.AllPlayersInTheRoom.ToList().ForEach(async p => await SendAllQueuedMessages(p));
             }
             catch (ArgumentException ex)
             {
-                player.QueueMessage(ex.Message);
+                roomContext.CurrentCommandingPlayer.QueueMessage(ex.Message);
 
-                await SendAllQueuedMessages(player);
+                await SendAllQueuedMessages(roomContext.CurrentCommandingPlayer);
             }
             catch (InvalidCommandSyntaxException ex)
             {
-                player.QueueMessage(ex.Message);
+                roomContext.CurrentCommandingPlayer.QueueMessage(ex.Message);
 
-                await SendAllQueuedMessages(player);
+                await SendAllQueuedMessages(roomContext.CurrentCommandingPlayer);
             }
         }
 

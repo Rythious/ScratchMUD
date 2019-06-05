@@ -18,10 +18,13 @@ namespace ScratchMUD.Server.Commands
             Name = NAME;
             SyntaxHelp = "HELP or HELP <COMMAND>";
             GeneralHelp = "Returns helpful information about available commands.";
+            MaximumParameterCount = 1;
         }
 
-        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, IEnumerable<ConnectedPlayer> playersInTheRoom, params string[] parameters)
+        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(RoomContext roomContext, params string[] parameters)
         {
+            ThrowInvalidCommandSyntaxExceptionIfTooManyParameters(parameters);
+
             var output = new List<(CommunicationChannel, string)>();
 
             if (parameters.Length == 0)
@@ -30,24 +33,20 @@ namespace ScratchMUD.Server.Commands
 
                 foreach (var command in availableCommands)
                 {
-                    connectedPlayer.QueueMessage(command);
+                    roomContext.CurrentCommandingPlayer.QueueMessage(command);
                 }
             }
-            else if (parameters.Length == 1)
+            else //parameters.Length == 1
             {
                 if (commandDictionary.ContainsKey(parameters[0]))
                 {
-                    connectedPlayer.QueueMessage(commandDictionary[parameters[0]].SyntaxHelp);
-                    connectedPlayer.QueueMessage(commandDictionary[parameters[0]].GeneralHelp);
+                    roomContext.CurrentCommandingPlayer.QueueMessage(commandDictionary[parameters[0]].SyntaxHelp);
+                    roomContext.CurrentCommandingPlayer.QueueMessage(commandDictionary[parameters[0]].GeneralHelp);
                 }
                 else
                 {
-                    connectedPlayer.QueueMessage($"No help found for '{parameters[0]}'.");
+                    roomContext.CurrentCommandingPlayer.QueueMessage($"No help found for '{parameters[0]}'.");
                 }
-            }
-            else
-            {
-                connectedPlayer.QueueMessage(InvalidSyntaxErrorText);
             }
 
             return Task.Run(() => output);
