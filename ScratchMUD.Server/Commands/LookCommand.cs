@@ -32,6 +32,11 @@ namespace ScratchMUD.Server.Commands
 
             List<string> output = BuildOutputMessages(roomDetails, exitsOutputString);
 
+            if (roomContext.NpcsInTheRoom != null && roomContext.NpcsInTheRoom.Any())
+            {
+                output.AddRange(roomContext.NpcsInTheRoom.Select(n => $"{n.ShortDescription} is here.").ToList());
+            }
+
             foreach (var message in output)
             {
                 roomContext.CurrentCommandingPlayer.QueueMessage(message);
@@ -59,11 +64,6 @@ namespace ScratchMUD.Server.Commands
                 roomDetails.FullDescription,
                 exitsOutputString
             };
-
-            if (roomDetails.Npcs != null)
-            {
-                output.AddRange(roomDetails.Npcs.Select(n => $"{n.ShortDescription} is here.").ToList());
-            }
 
             return output;
         }

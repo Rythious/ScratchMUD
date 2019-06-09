@@ -99,55 +99,6 @@ namespace ScratchMUD.Server.UnitTests.Commands
             Assert.DoesNotContain(Directions.Up.ToString(), exits, StringComparison.OrdinalIgnoreCase);
         }
 
-        [Fact(DisplayName = "ExecuteAsync => When there are non player characters in the room, returns a line for each with its short description")]
-        public async void ExecuteAsyncWhenThereAreNonPlayerCharactersInTheRoomReturnsALineForEachWithItsShortDescription()
-        {
-            //Arrange
-            var npc1 = new Models.Npc
-            {
-                ShortDescription = "Test Npc1"
-            };
-
-            var npc2 = new Models.Npc
-            {
-                ShortDescription = "Test Npc2"
-            };
-
-            var room = new Models.Room
-            {
-                Exits = new HashSet<(Directions, int)>
-                {
-                    (Directions.East, 3)
-                },
-                Title = "Room title",
-                FullDescription = "Full description of room",
-                Npcs = new List<Models.Npc> { npc1, npc2 }
-            };
-
-            mockRoomRepository.Setup(rr => rr.GetRoomWithTranslatedValues(It.IsAny<int>())).Returns(room);
-
-            //Act
-            var result = await lookCommand.ExecuteAsync(roomContext);
-
-            //Assert
-            mockRoomRepository.VerifyAll();
-            Assert.NotNull(result);
-            Assert.True(result.Count == 0);
-            Assert.True(roomContext.CurrentCommandingPlayer.MessageQueueCount == 5);
-            Assert.Equal(room.Title, roomContext.CurrentCommandingPlayer.DequeueMessage());
-            Assert.Equal(room.FullDescription, roomContext.CurrentCommandingPlayer.DequeueMessage());
-            var exits = roomContext.CurrentCommandingPlayer.DequeueMessage();
-            Assert.Contains("Exits", exits, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains(Directions.East.ToString(), exits, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.West.ToString(), exits, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.Down.ToString(), exits, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.North.ToString(), exits, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.South.ToString(), exits, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Directions.Up.ToString(), exits, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains(npc1.ShortDescription, roomContext.CurrentCommandingPlayer.DequeueMessage());
-            Assert.Contains(npc2.ShortDescription, roomContext.CurrentCommandingPlayer.DequeueMessage());
-        }
-
         [Fact(DisplayName = "ExecuteAsync => When a room has no exits, the Exits string has none")]
         public async void ExecuteAsyncWhenARoomHasNoExitsTheExitsStringHasNone()
         {

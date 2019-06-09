@@ -12,6 +12,5 @@ namespace ScratchMUD.Server.Models
         public string Author { get; set; }
         public HashSet<(Directions, int)> Exits { get; set; }
         public string ShortDescription { get; set; }
-        public IEnumerable<Npc> Npcs { get; set; }
     }
 }
