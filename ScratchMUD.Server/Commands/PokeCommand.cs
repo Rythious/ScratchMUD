@@ -28,37 +28,39 @@ namespace ScratchMUD.Server.Commands
             {
                 playerDoingThePoking.QueueMessage(InvalidSyntaxErrorText);
             }
-
-            var targetOfPoke = base.AttemptToGetTargetFromPlayersInTheRoom(parameters[0], roomContext);
-
-            if (targetOfPoke == null)
+            else
             {
-                var npc = base.AttemptToGetTargetFromNpcsInTheRoom(parameters[0], roomContext);
+                var targetOfPoke = base.AttemptToGetTargetFromPlayersInTheRoom(parameters[0], roomContext);
 
-                if (npc == null)
+                if (targetOfPoke == null)
                 {
-                    playerDoingThePoking.QueueMessage("Could not poke the target. The target could not be found.");
+                    var npc = base.AttemptToGetTargetFromNpcsInTheRoom(parameters[0], roomContext);
+
+                    if (npc == null)
+                    {
+                        playerDoingThePoking.QueueMessage("Could not poke the target. The target could not be found.");
+                    }
+                    else
+                    {
+                        playerDoingThePoking.QueueMessage($"You poked {npc.ShortDescription}.");
+
+                        QueueMessagesForWitnessingPlayers(roomContext.OtherPlayersInTheRoom, $"{playerDoingThePoking.Name} poked {npc.ShortDescription}.");
+                    }
+                }
+                else if (targetOfPoke == playerDoingThePoking)
+                {
+                    playerDoingThePoking.QueueMessage("You poked yourself. Ouch!");
+
+                    QueueMessagesForWitnessingPlayers(roomContext.OtherPlayersInTheRoom, $"{playerDoingThePoking.Name} poked themselves.");
                 }
                 else
                 {
-                    playerDoingThePoking.QueueMessage($"You poke {npc.ShortDescription}.");
+                    playerDoingThePoking.QueueMessage($"You poked {targetOfPoke.Name}");
 
-                    QueueMessagesForWitnessingPlayers(roomContext.OtherPlayersInTheRoom, $"{playerDoingThePoking.Name} poked {npc.ShortDescription}.");
+                    targetOfPoke.QueueMessage($"{playerDoingThePoking.Name} poked you.  Ouch!");
+
+                    QueueMessagesForWitnessingPlayers(roomContext.OtherPlayersInTheRoom.Except(new List<ConnectedPlayer> { targetOfPoke }), $"{playerDoingThePoking.Name} poked {targetOfPoke.Name}.");
                 }
-            }
-            else if (targetOfPoke == playerDoingThePoking)
-            {
-                playerDoingThePoking.QueueMessage("You poke yourself. Ouch!");
-
-                QueueMessagesForWitnessingPlayers(roomContext.OtherPlayersInTheRoom, $"{playerDoingThePoking.Name} poked themselves.");
-            }
-            else
-            {
-                playerDoingThePoking.QueueMessage($"You poked {targetOfPoke.Name}");
-
-                targetOfPoke.QueueMessage($"{playerDoingThePoking.Name} poked you.  Ouch!");
-
-                QueueMessagesForWitnessingPlayers(roomContext.OtherPlayersInTheRoom.Except(new List<ConnectedPlayer> { targetOfPoke }), $"{playerDoingThePoking.Name} poked {targetOfPoke.Name}.");
             }
 
             return Task.Run(() => new List<(CommunicationChannel, string)>());
