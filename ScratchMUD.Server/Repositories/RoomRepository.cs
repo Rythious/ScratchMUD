@@ -16,6 +16,11 @@ namespace ScratchMUD.Server.Repositories
             this.context = context;
         }
 
+        public IEnumerable<int> GetRoomIdsByAreaId(int areaId)
+        {
+            return context.Room.Where(r => r.AreaId == areaId).Select(r => r.RoomId).ToList();
+        }
+
         public string GetRoomFullDescription(int roomId)
         {
             return context.RoomTranslation.Single(rt => rt.RoomId == roomId).FullDescription;

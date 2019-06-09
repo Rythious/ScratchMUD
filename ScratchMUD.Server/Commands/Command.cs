@@ -35,7 +35,7 @@ namespace ScratchMUD.Server.Commands
 
         protected Models.Npc AttemptToGetTargetFromNpcsInTheRoom(string targetSelector, RoomContext roomContext)
         {
-            var firstTarget = roomContext.NpcsInTheRoom.FirstOrDefault(n => n.ShortDescription.StartsWith(targetSelector));
+            var firstTarget = roomContext.NpcsInTheRoom.FirstOrDefault(n => n.ShortDescription.Contains(targetSelector));
 
             return firstTarget;
         }

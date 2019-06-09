@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using ScratchMUD.Server.Cache;
 using ScratchMUD.Server.Commands;
 using ScratchMUD.Server.Exceptions;
 using ScratchMUD.Server.Infrastructure;
@@ -16,16 +17,19 @@ namespace ScratchMUD.Server.Hubs
         private readonly ICommandRepository commandRepository;
         private readonly IPlayerConnections playerConnections;
         private readonly IPlayerRepository playerRepository;
+        private readonly IAreaCache areaCache;
 
         public EventHub(
             ICommandRepository commandRepository,
             IPlayerConnections playerConnections,
-            IPlayerRepository playerRepository
+            IPlayerRepository playerRepository,
+            IAreaCache areaCache
         )
         {
             this.commandRepository = commandRepository;
             this.playerConnections = playerConnections;
             this.playerRepository = playerRepository;
+            this.areaCache = areaCache;
         }
 
         public override Task OnConnectedAsync()
@@ -70,7 +74,8 @@ namespace ScratchMUD.Server.Hubs
             var roomContext = new RoomContext
             {
                 CurrentCommandingPlayer = player,
-                OtherPlayersInTheRoom = playersInRoom.Except(new List<ConnectedPlayer> { player })
+                OtherPlayersInTheRoom = playersInRoom.Except(new List<ConnectedPlayer> { player }),
+                NpcsInTheRoom = areaCache.GetNpcsInRoom(player.RoomId)
             };
 
             try
