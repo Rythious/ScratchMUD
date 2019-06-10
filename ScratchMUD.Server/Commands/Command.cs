@@ -21,7 +21,7 @@ namespace ScratchMUD.Server.Commands
             }
         }
 
-        protected ConnectedPlayer AttemptToGetTargetFromPlayersInTheRoom(string targetSelector, RoomContext roomContext)
+        protected ITargetable AttemptToGetTargetFromPlayersInTheRoom(string targetSelector, RoomContext roomContext)
         {
             if (targetSelector.ToLower() == "self")
             {
@@ -33,7 +33,7 @@ namespace ScratchMUD.Server.Commands
             return firstTarget;
         }
 
-        protected Models.Npc AttemptToGetTargetFromNpcsInTheRoom(string targetSelector, RoomContext roomContext)
+        protected ITargetable AttemptToGetTargetFromNpcsInTheRoom(string targetSelector, RoomContext roomContext)
         {
             var firstTarget = roomContext.NpcsInTheRoom.FirstOrDefault(n => n.ShortDescription.Contains(targetSelector));
 

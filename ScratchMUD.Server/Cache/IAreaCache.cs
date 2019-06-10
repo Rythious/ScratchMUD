@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using ScratchMUD.Server.Models;
+using ScratchMUD.Server.Infrastructure;
 
 namespace ScratchMUD.Server.Cache
 {

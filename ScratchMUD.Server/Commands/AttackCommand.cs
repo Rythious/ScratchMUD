@@ -1,4 +1,5 @@
-﻿using ScratchMUD.Server.Infrastructure;
+﻿using ScratchMUD.Server.Combat;
+using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models.Constants;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -8,13 +9,15 @@ namespace ScratchMUD.Server.Commands
     internal class AttackCommand : Command, ICommand
     {
         internal const string NAME = "attack";
-         
-        public AttackCommand()
+        private readonly IPlayerCombatHostedService playerCombatHostedService;
+
+        public AttackCommand(IPlayerCombatHostedService playerCombatHostedService)
         {
             Name = NAME;
             SyntaxHelp = $"{NAME.ToUpper()} <TARGET>";
             GeneralHelp = "Attacks an NPC in the current room.";
             MaximumParameterCount = 1;
+            this.playerCombatHostedService = playerCombatHostedService;
         }
 
         public Task<List<(CommunicationChannel, string)>> ExecuteAsync(RoomContext roomContext, params string[] parameters)
@@ -41,11 +44,17 @@ namespace ScratchMUD.Server.Commands
                     }
                     else
                     {
-                        
+                        var npcCombatant = (ICombatant)npc;
 
-                        //playerDoingThePoking.QueueMessage($"You poked {npc.ShortDescription}.");
+                        playerInitiatingTheAttack.Target = npcCombatant;
+                        npcCombatant.Target = playerInitiatingTheAttack;
 
-                        //QueueMessagesForWitnessingPlayers(roomContext.OtherPlayersInTheRoom, $"{playerDoingThePoking.Name} poked {npc.ShortDescription}.");
+                        var altercation = new Altercation
+                        {
+                            Combatants = new List<ICombatant> { playerInitiatingTheAttack, npcCombatant }
+                        };
+
+                        playerCombatHostedService.StartTrackingAltercation(altercation);
                     }
                 }
                 else if (targetOfAttack == playerInitiatingTheAttack)

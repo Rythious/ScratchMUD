@@ -25,7 +25,7 @@ namespace ScratchMUD.Server.Infrastructure
         {
             IEnumerable<int> roomIds = roomRepository.GetRoomIdsByAreaId(areaId);
 
-            var npcsInTheArea = new List<Models.Npc>();
+            var npcsInTheArea = new List<Npc>();
 
             foreach (var id in roomIds)
             {

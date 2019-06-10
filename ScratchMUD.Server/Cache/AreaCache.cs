@@ -1,4 +1,4 @@
-﻿using ScratchMUD.Server.Models;
+﻿using ScratchMUD.Server.Infrastructure;
 using System.Collections.Generic;
 
 namespace ScratchMUD.Server.Cache

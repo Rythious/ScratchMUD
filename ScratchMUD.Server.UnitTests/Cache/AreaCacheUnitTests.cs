@@ -1,4 +1,5 @@
 ﻿using ScratchMUD.Server.Cache;
+using ScratchMUD.Server.Infrastructure;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
@@ -20,14 +21,14 @@ namespace ScratchMUD.Server.UnitTests.Cache
             //Arrange
             const int ROOM_ID_FOR_TEST = 1;
 
-            areaCache.SpawnedNpcs = new List<Models.Npc>
+            areaCache.SpawnedNpcs = new List<Npc>
             {
-                new Models.Npc
+                new Npc
                 {
                     RoomId = ROOM_ID_FOR_TEST,
                     Id = 1
                 },
-                new Models.Npc
+                new Npc
                 {
                     RoomId = 2,
                     Id = 2
@@ -48,7 +49,7 @@ namespace ScratchMUD.Server.UnitTests.Cache
             //Arrange
             const int ROOM_ID_FOR_TEST = 1;
 
-            areaCache.SpawnedNpcs = new List<Models.Npc>();
+            areaCache.SpawnedNpcs = new List<Npc>();
 
             //Act
             var npcInRoom = areaCache.GetNpcsInRoom(ROOM_ID_FOR_TEST);

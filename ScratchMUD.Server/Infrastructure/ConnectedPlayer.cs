@@ -1,9 +1,10 @@
-﻿using ScratchMUD.Server.EntityFramework;
+﻿using ScratchMUD.Server.Combat;
+using ScratchMUD.Server.EntityFramework;
 using System.Collections.Generic;
 
 namespace ScratchMUD.Server.Infrastructure
 {
-    public class ConnectedPlayer
+    public class ConnectedPlayer : ICombatant, ITargetable
     {
         internal PlayerCharacter PlayerCharacter { get; set; }
         private readonly Queue<string> commandQueue = new Queue<string>();
@@ -14,12 +15,14 @@ namespace ScratchMUD.Server.Infrastructure
             PlayerCharacter = playerCharacter;
         }
 
-        internal string Name => PlayerCharacter.Name;
+        public string Name => PlayerCharacter.Name;
         internal int RoomId => PlayerCharacter.RoomId;
         internal int CommandQueueCount => commandQueue.Count;
         internal int MessageQueueCount => messageQueue.Count;
         internal int PlayerCharacterId => PlayerCharacter.PlayerCharacterId;
         internal int Health { get; private set; } = 50;
+
+        public ICombatant Target { get; set; }
 
         internal void QueueCommand(string commandName)
         {
@@ -39,6 +42,26 @@ namespace ScratchMUD.Server.Infrastructure
         internal string DequeueMessage()
         {
             return messageQueue.Dequeue();
+        }
+
+        public bool IsReadyWithAttack()
+        {
+            return true;
+        }
+
+        public ICombatAction DequeueAction()
+        {
+            return new BasicAttack(Target);
+        }
+
+        public bool IsDone()
+        {
+            return Health <= 0;
+        }
+
+        public void EvaluateDamage(int damage)
+        {
+            Health -= damage;
         }
     }
 }

@@ -13,12 +13,12 @@ namespace ScratchMUD.Server.Repositories
             this.context = context;
         }
 
-        public IEnumerable<Models.Npc> GetNpcsByRoomId(int roomId)
+        public IEnumerable<Infrastructure.Npc> GetNpcsByRoomId(int roomId)
         {
-            IQueryable<Models.Npc> npcsInTheRoom = from rn in context.RoomNpc
+            IQueryable<Infrastructure.Npc> npcsInTheRoom = from rn in context.RoomNpc
                                 where rn.RoomId == roomId
                                 join nt in context.NpcTranslation on rn.NpcId equals nt.NpcId
-                                select new Models.Npc
+                                select new Infrastructure.Npc
                                 {
                                     Id = rn.NpcId,
                                     RoomId = rn.RoomId,

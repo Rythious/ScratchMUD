@@ -35,7 +35,7 @@ namespace ScratchMUD.Server.HostedServices
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _timer = new Timer(TrackMinutes, null, TimeSpan.FromMilliseconds(1000 - DateTime.Now.Millisecond), TimeSpan.FromMinutes(15));
+            _timer = new Timer(TrackMinutes, null, TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(15));
 
             return Task.CompletedTask;
         }
