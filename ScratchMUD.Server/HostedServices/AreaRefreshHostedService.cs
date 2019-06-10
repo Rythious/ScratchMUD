@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.HostedServices
 {
-    public class ServerTimeHostedService : IHostedService, IDisposable
+    public class AreaRefreshHostedService : IHostedService, IDisposable
     {
         private readonly IHubContext<EventHub> _hubContext;
         private Timer _timer;
 
-        public ServerTimeHostedService(
+        public AreaRefreshHostedService(
             IHubContext<EventHub> hubContext,
             IServiceScopeFactory serviceScopeFactory
         )

@@ -31,7 +31,7 @@ namespace ScratchMUD.Server
             {
                 options.EnableDetailedErrors = true;
             });
-            services.AddHostedService<ServerTimeHostedService>();
+            services.AddHostedService<AreaRefreshHostedService>();
             services.AddScoped<ICommandRepository, CommandRepository>();
             services.AddScoped<IRoomRepository, RoomRepository>();
             services.AddScoped<IPlayerRepository, PlayerRepository>();

@@ -36,7 +36,7 @@ namespace ScratchMUD.Server.Commands
             this.roomRepository = roomRepository;
 
             Name = NAME;
-            SyntaxHelp = "ROOMEDIT or ROOMEDIT EXIT, ROOMEDIT TITLE <VALUE>, ROOMEDIT SHORT-DESCRIPTION <VALUE>, ROOMEDIT FULL-DESCRIPTION <VALUE>, ROOMEDIT CREATE-NORTH, ROOMEDIT CREATE-EAST, ROOMEDIT CREATE-SOUTH, ROOMEDIT CREATE-WEST, ROOMEDIT CREATE-UP, ROOMEDIT CREATE-DOWN";
+            SyntaxHelp = $"{NAME.ToUpper()} or {NAME.ToUpper()} EXIT, {NAME.ToUpper()} TITLE <VALUE>, {NAME.ToUpper()} SHORT-DESCRIPTION <VALUE>, {NAME.ToUpper()} FULL-DESCRIPTION <VALUE>, {NAME.ToUpper()} CREATE-NORTH, {NAME.ToUpper()} CREATE-EAST, {NAME.ToUpper()} CREATE-SOUTH, {NAME.ToUpper()} CREATE-WEST, {NAME.ToUpper()} CREATE-UP, {NAME.ToUpper()} CREATE-DOWN";
             GeneralHelp = "If the user has sufficient editing permissions for the current area, they will enter editing mode of their current room.  The Exit subcommand will exit this mode.";
         }
 

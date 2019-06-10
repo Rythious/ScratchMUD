@@ -28,7 +28,8 @@ namespace ScratchMUD.Server.Repositories
                 [Directions.West.ToString().ToLower()] = new MoveCommand(Directions.West, roomRepository, playerRepository),
                 [Directions.Up.ToString().ToLower()] = new MoveCommand(Directions.Up, roomRepository, playerRepository),
                 [Directions.Down.ToString().ToLower()] = new MoveCommand(Directions.Down, roomRepository, playerRepository),
-                [PokeCommand.NAME] = new PokeCommand()
+                [PokeCommand.NAME] = new PokeCommand(),
+                [AttackCommand.NAME] = new AttackCommand()
             };
 
             CommandDictionary[HelpCommand.NAME] = new HelpCommand(CommandDictionary);

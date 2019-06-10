@@ -6,5 +6,6 @@
         public int RoomId { get; set; }
         public string ShortDescription { get; set; }
         public string FullDescription { get; set; }
+        public int Health { get; set; }
     }
 }

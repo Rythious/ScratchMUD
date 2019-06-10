@@ -13,7 +13,7 @@ namespace ScratchMUD.Server.Commands
         public PokeCommand()
         {
             Name = NAME;
-            SyntaxHelp = "poke <TARGET>";
+            SyntaxHelp = $"{NAME.ToUpper()} <TARGET>";
             GeneralHelp = "Your character pokes another character in the room.";
             MaximumParameterCount = 1;
         }

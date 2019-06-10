@@ -23,7 +23,8 @@ namespace ScratchMUD.Server.Repositories
                                     Id = rn.NpcId,
                                     RoomId = rn.RoomId,
                                     FullDescription = nt.FullDescription,
-                                    ShortDescription = nt.ShortDescription
+                                    ShortDescription = nt.ShortDescription,
+                                    Health = 20
                                 };
 
             return npcsInTheRoom;

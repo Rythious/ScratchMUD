@@ -19,6 +19,7 @@ namespace ScratchMUD.Server.Infrastructure
         internal int CommandQueueCount => commandQueue.Count;
         internal int MessageQueueCount => messageQueue.Count;
         internal int PlayerCharacterId => PlayerCharacter.PlayerCharacterId;
+        internal int Health { get; private set; } = 50;
 
         internal void QueueCommand(string commandName)
         {
