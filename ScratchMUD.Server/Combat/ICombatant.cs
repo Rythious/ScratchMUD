@@ -6,7 +6,8 @@
         string Name { get; }
 
         bool IsReadyWithAttack();
-        ICombatAction DequeueAction();
+        void QueueCombatAction(ICombatAction combatAction);
+        ICombatAction DequeueCombatAction();
         bool IsDone();
         void EvaluateDamage(int v);
     }

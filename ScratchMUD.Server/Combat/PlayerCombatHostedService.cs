@@ -39,7 +39,7 @@ namespace ScratchMUD.Server.Combat
                 {
                     if (combatant.IsReadyWithAttack() && !altercation.IsOver())
                     {
-                        ICombatAction action = combatant.DequeueAction();
+                        ICombatAction action = combatant.DequeueCombatAction();
 
                         if (combatant is ConnectedPlayer)
                         {

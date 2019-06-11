@@ -1,4 +1,5 @@
-﻿using ScratchMUD.Server.EntityFramework;
+﻿using ScratchMUD.Server.Combat;
+using ScratchMUD.Server.EntityFramework;
 using ScratchMUD.Server.Infrastructure;
 using Xunit;
 
@@ -88,6 +89,74 @@ namespace ScratchMUD.Server.UnitTests.Infrastructure
             //Assert
             Assert.Equal(startingCountOfCommands - 1, connectedPlayer.CommandQueueCount);
             Assert.Equal(FIRST_COMMAND, result);
+        }
+
+        [Fact(DisplayName = "QueueMessage => Adds to the MessageQueueCount")]
+        public void QueueMessageAddsToTheMessageQueueCount()
+        {
+            //Arrange
+            var startingCountOfMessages = connectedPlayer.MessageQueueCount;
+
+            //Act
+            connectedPlayer.QueueMessage("newMessage");
+
+            //Assert
+            Assert.Equal(startingCountOfMessages + 1, connectedPlayer.MessageQueueCount);
+        }
+
+        [Fact(DisplayName = "DequeueMessage => Reduces to the MessageQueueCount and returns the correct message")]
+        public void DequeueMessageReducesTheMessageQueueCountAndReturnsTheCorrectMessage()
+        {
+            //Arrange
+            const string FIRST_MESSAGE = "first";
+
+            connectedPlayer.QueueMessage(FIRST_MESSAGE);
+            connectedPlayer.QueueMessage("second");
+
+            var startingCountOfMessages = connectedPlayer.MessageQueueCount;
+
+            //Act
+            var result = connectedPlayer.DequeueMessage();
+
+            //Assert
+            Assert.Equal(startingCountOfMessages - 1, connectedPlayer.MessageQueueCount);
+            Assert.Equal(FIRST_MESSAGE, result);
+        }
+
+        [Fact(DisplayName = "QueueCombatAction => Adds to the CombatActionQueueCount")]
+        public void QueueCombatActionAddsToTheCombatActionQueueCount()
+        {
+            //Arrange
+            var startingCountOfCombatActions = connectedPlayer.CombatActionQueueCount;
+
+            //Act
+            connectedPlayer.QueueCombatAction(new BasicAttack(new ConnectedPlayer(new PlayerCharacter())));
+
+            //Assert
+            Assert.Equal(startingCountOfCombatActions + 1, connectedPlayer.CombatActionQueueCount);
+        }
+
+        [Fact(DisplayName = "DequeueCombatAction => Reduces to the CombatActionQueueCount and returns the correct combat action")]
+        public void DequeueCombatActionReducesTheCombatActionQueueCountAndReturnsTheCorrectCombatAction()
+        {
+            //Arrange
+            var firstTarget = new ConnectedPlayer(new PlayerCharacter { Name = "First" });
+            var secondTarget = new ConnectedPlayer(new PlayerCharacter { Name = "Second" });
+
+            var firstCombatAction = new BasicAttack(firstTarget);
+            var secondCombatAction = new BasicAttack(secondTarget);
+
+            connectedPlayer.QueueCombatAction(firstCombatAction);
+            connectedPlayer.QueueCombatAction(secondCombatAction);
+
+            var startingCountOfCombatActions = connectedPlayer.CombatActionQueueCount;
+
+            //Act
+            var result = connectedPlayer.DequeueCombatAction();
+
+            //Assert
+            Assert.Equal(startingCountOfCombatActions - 1, connectedPlayer.CombatActionQueueCount);
+            Assert.Equal(firstCombatAction, result);
         }
     }
 }

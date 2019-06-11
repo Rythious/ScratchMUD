@@ -36,6 +36,17 @@ namespace ScratchMUD.Server.Hubs
         {
             Task.Run(() => SendMessageToProperChannel((CommunicationChannel.Everyone, $"A new client has connected on {Context.ConnectionId}.")));
 
+            ConnectedPlayer connectedPlayer = GetAvailablePlayerAsConnectedPlayer();
+
+            Task.Run(() => connectedPlayer.QueueMessage($"You are playing as {connectedPlayer.Name}."));
+
+            ExecuteClientCommand(LookCommand.NAME).GetAwaiter().GetResult();
+
+            return base.OnConnectedAsync();
+        }
+
+        private ConnectedPlayer GetAvailablePlayerAsConnectedPlayer()
+        {
             var availableCharacterId = playerConnections.GetAvailablePlayerCharacterId();
 
             var playerCharacter = playerRepository.GetPlayerCharacter(availableCharacterId);
@@ -44,11 +55,7 @@ namespace ScratchMUD.Server.Hubs
 
             playerConnections.AddConnectedPlayer(Context.ConnectionId, connectedPlayer);
 
-            Task.Run(() => connectedPlayer.QueueMessage($"You are playing as {playerCharacter.Name}."));
-
-            ExecuteClientCommand(LookCommand.NAME).GetAwaiter().GetResult();
-
-            return base.OnConnectedAsync();
+            return connectedPlayer;
         }
 
         public async Task RelayClientMessage(string message)

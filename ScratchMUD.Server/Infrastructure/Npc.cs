@@ -1,4 +1,5 @@
 ﻿using ScratchMUD.Server.Combat;
+using System.Collections.Generic;
 
 namespace ScratchMUD.Server.Infrastructure
 {
@@ -13,10 +14,26 @@ namespace ScratchMUD.Server.Infrastructure
 
         public string Name => ShortDescription;
 
-        public ICombatAction DequeueAction()
+        #region CombatAction Queue
+        private readonly Queue<ICombatAction> combatActionQueue = new Queue<ICombatAction>();
+
+        internal int CombatActionQueueCount => combatActionQueue.Count;
+
+        public void QueueCombatAction(ICombatAction combatAction)
         {
+            combatActionQueue.Enqueue(combatAction);
+        }
+
+        public ICombatAction DequeueCombatAction()
+        {
+            if (CombatActionQueueCount > 0)
+            {
+                return combatActionQueue.Dequeue();
+            }
+
             return new BasicAttack(Target);
         }
+        #endregion
 
         public void EvaluateDamage(int damage)
         {
