@@ -9,6 +9,7 @@ namespace ScratchMUD.Server.Infrastructure
         internal PlayerCharacter PlayerCharacter { get; set; }
         internal int Health { get; private set; } = 50;
         public ICombatant Target { get; set; }
+        public string SignalRConnectionId { get; set; }
 
         public ConnectedPlayer(PlayerCharacter playerCharacter)
         {

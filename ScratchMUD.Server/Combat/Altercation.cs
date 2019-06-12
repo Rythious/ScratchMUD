@@ -1,9 +1,8 @@
-﻿using ScratchMUD.Server.Combat;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ScratchMUD.Server.Infrastructure
+namespace ScratchMUD.Server.Combat
 {
     public class Altercation
     {
@@ -11,7 +10,7 @@ namespace ScratchMUD.Server.Infrastructure
 
         internal void End()
         {
-            throw new NotImplementedException();
+
         }
 
         internal bool IsOver()

@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ScratchMUD.Server.Cache;
 using ScratchMUD.Server.Hubs;
-using ScratchMUD.Server.Infrastructure;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

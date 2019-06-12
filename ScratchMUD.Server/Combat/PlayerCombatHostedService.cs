@@ -41,9 +41,10 @@ namespace ScratchMUD.Server.Combat
                     {
                         ICombatAction action = combatant.DequeueCombatAction();
 
-                        if (combatant is ConnectedPlayer)
+                        if (combatant is ConnectedPlayer connectedPlayer)
                         {
-                            ((ConnectedPlayer)combatant).QueueMessage($"You used {action.Description} on {action.Target.Name}");
+                            var updateMessage = $"You used {action.Description} on {action.Target.Name}";
+                            await _hubContext.Clients.Client(connectedPlayer.SignalRConnectionId).SendAsync("ReceiveServerCreatedMessage", updateMessage);
                         }
 
                         action.Act();

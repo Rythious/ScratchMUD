@@ -1,5 +1,4 @@
-﻿using ScratchMUD.Server.Infrastructure;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Combat
 {

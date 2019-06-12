@@ -38,6 +38,8 @@ namespace ScratchMUD.Server.Hubs
 
             ConnectedPlayer connectedPlayer = GetAvailablePlayerAsConnectedPlayer();
 
+            connectedPlayer.SignalRConnectionId = Context.ConnectionId;
+
             Task.Run(() => connectedPlayer.QueueMessage($"You are playing as {connectedPlayer.Name}."));
 
             ExecuteClientCommand(LookCommand.NAME).GetAwaiter().GetResult();

@@ -1,8 +1,8 @@
-﻿using ScratchMUD.Server.Cache;
+﻿using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Repositories;
 using System.Collections.Generic;
 
-namespace ScratchMUD.Server.Infrastructure
+namespace ScratchMUD.Server.Cache
 {
     public class AreaCacheManager : IAreaCacheManager
     {

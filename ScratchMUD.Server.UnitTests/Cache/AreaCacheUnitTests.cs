@@ -57,5 +57,15 @@ namespace ScratchMUD.Server.UnitTests.Cache
             //Assert
             Assert.Empty(npcInRoom);
         }
+
+        [Fact(DisplayName = "AreaId => Returns a default value of 1")]
+        public void AreaIdReturnsADefaultValueOf1()
+        {
+            //Arrange
+            var newAreaCache = new AreaCache();
+
+            //Arrange & Act & Assert
+            Assert.Equal(1, newAreaCache.AreaId);
+        }
     }
 }
