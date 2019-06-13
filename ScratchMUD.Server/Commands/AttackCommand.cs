@@ -49,7 +49,7 @@ namespace ScratchMUD.Server.Commands
                         playerInitiatingTheAttack.Target = npcCombatant;
                         npcCombatant.Target = playerInitiatingTheAttack;
 
-                        var altercation = new Altercation
+                        var altercation = new Altercation(playerInitiatingTheAttack.RoomId)
                         {
                             Combatants = new List<ICombatant> { playerInitiatingTheAttack, npcCombatant }
                         };

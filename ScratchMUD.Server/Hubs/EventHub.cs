@@ -55,17 +55,14 @@ namespace ScratchMUD.Server.Hubs
 
             var connectedPlayer = new ConnectedPlayer(playerCharacter);
 
-            playerConnections.AddConnectedPlayer(Context.ConnectionId, connectedPlayer);
+            connectedPlayer.SignalRConnectionId = Context.ConnectionId;
+
+            playerConnections.AddConnectedPlayer(connectedPlayer);
 
             return connectedPlayer;
         }
 
-        public async Task RelayClientMessage(string message)
-        {
-            await ExecuteClientCommand(message);
-        }
-
-        private async Task ExecuteClientCommand(string message)
+        public async Task ExecuteClientCommand(string message)
         {
             var command = CommandParser.SplitCommandFromParameters(message, out string[] parameters);
 
@@ -78,7 +75,7 @@ namespace ScratchMUD.Server.Hubs
             }
 
             var player = playerConnections.GetConnectedPlayerByConnectionId(Context.ConnectionId);
-            var playersInRoom = playerConnections.GetConnectedPlayersInTheSameRoomAsAConnection(Context.ConnectionId);
+            var playersInRoom = playerConnections.GetConnectedPlayersInARoom(player.RoomId);
 
             var roomContext = new RoomContext
             {
@@ -116,7 +113,7 @@ namespace ScratchMUD.Server.Hubs
             }
         }
 
-        public async Task SendMessageToProperChannel((CommunicationChannel CommChannel, string Message) channeledMessage)
+        private async Task SendMessageToProperChannel((CommunicationChannel CommChannel, string Message) channeledMessage)
         {
             await SendMessagesToProperChannels(new List<(CommunicationChannel, string)> { channeledMessage });
         }
@@ -134,13 +131,11 @@ namespace ScratchMUD.Server.Hubs
 
         private async Task SendAllQueuedMessages(ConnectedPlayer connectedPlayer)
         {
-            var connectionId = playerConnections.GetConnectionOfConnectedPlayer(connectedPlayer);
-
             while (connectedPlayer.MessageQueueCount > 0)
             {
                 var message = connectedPlayer.DequeueMessage();
 
-                await Clients.Client(connectionId).SendAsync("ReceiveServerCreatedMessage", message);
+                await Clients.Client(connectedPlayer.SignalRConnectionId).SendAsync("ReceiveServerCreatedMessage", message);
             }
         }
     }

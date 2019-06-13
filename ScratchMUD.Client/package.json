@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "webpack --mode=development --watch",
+    "build": "webpack --mode=development",
     "release": "webpack --mode=production",
     "publish": "npm run release && dotnet publish -c Release"
   },

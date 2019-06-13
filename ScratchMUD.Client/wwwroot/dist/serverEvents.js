@@ -6,8 +6,8 @@ var userCommandTextField = document.querySelector("#userCommand");
 var mudOutputWindow = document.querySelector("#mudOutputWindow");
 var mudOutputList = document.querySelector("#mudOutputList");
 var userCommandForm = document.querySelector("#userCommandForm");
-var connection = new signalR.HubConnectionBuilder().withUrl("https://creatorsarelegionserver.azurewebsites.net/EventHub", 0).build();
-//const connection = new signalR.HubConnectionBuilder().withUrl("https://localhost:5021/EventHub", 0).build();
+//const connection = new signalR.HubConnectionBuilder().withUrl("https://creatorsarelegionserver.azurewebsites.net/EventHub", 0).build();
+var connection = new signalR.HubConnectionBuilder().withUrl("https://localhost:5021/EventHub", 0).build();
 // While not connected to SignalR, disable the UI that relies upon it.
 sendUserCommandButton.disabled = true;
 userCommandTextField.disabled = true;
@@ -57,7 +57,7 @@ function addClickEventToOutputWindowToFocusOnCommandTextField() {
     });
 }
 function sendClientMessage(message) {
-    connection.invoke("RelayClientMessage", message).catch(function (err) {
+    connection.invoke("ExecuteClientCommand", message).catch(function (err) {
         return console.error(err.toString());
     });
 }

@@ -7,6 +7,12 @@ namespace ScratchMUD.Server.Combat
     public class Altercation
     {
         public IEnumerable<ICombatant> Combatants { get; set; }
+        public int RoomId { get; }
+
+        public Altercation(int roomId)
+        {
+            RoomId = roomId;
+        }
 
         internal void End()
         {
