@@ -78,6 +78,27 @@ namespace ScratchMUD.Server.Combat
                         }
                     }
                 }
+
+                if (altercation.IsOver())
+                {
+                    var defeatedCombatant = altercation.Combatants.Where(c => c.IsDone()).Single();
+                    var otherCombatants = altercation.Combatants.Except(new List<ICombatant> { defeatedCombatant });
+
+                    foreach (var winningCombatant in otherCombatants)
+                    {
+                        if (winningCombatant is ConnectedPlayer winningPlayer)
+                        {
+                            var updateMessage = $"You defeated {defeatedCombatant.Name}";
+                            await hubContext.Clients.Client(winningPlayer.SignalRConnectionId).SendAsync("ReceiveServerCreatedMessage", updateMessage);
+                        }
+                    }
+
+                    if (defeatedCombatant is ConnectedPlayer losingPlayer)
+                    {
+                        var updateMessage = $"You were defeated.";
+                        await hubContext.Clients.Client(losingPlayer.SignalRConnectionId).SendAsync("ReceiveServerCreatedMessage", updateMessage);
+                    }
+                }
             }
 
             Altercations.RemoveAll(a => a.IsOver());
