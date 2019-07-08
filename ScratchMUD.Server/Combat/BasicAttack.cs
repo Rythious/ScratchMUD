@@ -2,11 +2,11 @@
 {
     internal class BasicAttack : ICombatAction
     {
+        private const string DESCRIPTION = "basic attack";
+
         public string Description => DESCRIPTION;
 
         public ICombatant Target { get; }
-
-        public const string DESCRIPTION = "basic attack";
 
         public BasicAttack(ICombatant target)
         {

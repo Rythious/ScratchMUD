@@ -20,8 +20,7 @@ namespace ScratchMUD.Server.Repositories
 
         public async Task UpdateRoomId(int playerCharacterId, int roomId)
         {
-            //GetPlayerCharacter(playerCharacterId).RoomId = roomId;
-            var player = context.PlayerCharacter.Single(pc => pc.PlayerCharacterId == playerCharacterId);
+            var player = GetPlayerCharacter(playerCharacterId);
             player.RoomId = roomId;
             await context.SaveChangesAsync();
         }

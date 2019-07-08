@@ -78,6 +78,11 @@ namespace ScratchMUD.Server.Commands
 
         private async Task<string> CreateRoomWithResponse(ConnectedPlayer connectedPlayer, string[] parameters)
         {
+            if (!editingState.IsPlayerCurrentlyEditing(connectedPlayer.Name, out EditType? editType) || editType != EditType.Room)
+            {
+                return "Must be in room edit mode.";
+            }
+
             var wasCommandRecognized = true;
             switch (parameters[0].ToLower())
             {
