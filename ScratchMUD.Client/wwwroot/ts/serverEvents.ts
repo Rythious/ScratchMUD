@@ -5,8 +5,8 @@ const userCommandTextField: HTMLInputElement = document.querySelector("#userComm
 const mudOutputWindow: HTMLMainElement = document.querySelector("#mudOutputWindow");
 const mudOutputList: HTMLUListElement = document.querySelector("#mudOutputList");
 const userCommandForm: HTMLFormElement = document.querySelector("#userCommandForm");
-//const connection = new signalR.HubConnectionBuilder().withUrl("https://creatorsarelegionserver.azurewebsites.net/EventHub", 0).build();
-const connection = new signalR.HubConnectionBuilder().withUrl("https://localhost:5021/EventHub", 0).build();
+const connection = new signalR.HubConnectionBuilder().withUrl("https://creatorsarelegionserver.azurewebsites.net/EventHub", 0).build();
+//const connection = new signalR.HubConnectionBuilder().withUrl("https://localhost:5021/EventHub", 0).build();
 
 // While not connected to SignalR, disable the UI that relies upon it.
 sendUserCommandButton.disabled = true;
