@@ -1,7 +1,6 @@
 ﻿using Moq;
 using ScratchMUD.Server.EntityFramework;
 using ScratchMUD.Server.Infrastructure;
-using ScratchMUD.Server.Models.Constants;
 using ScratchMUD.Server.Repositories;
 using System;
 using System.Collections.Generic;
@@ -13,6 +12,7 @@ namespace ScratchMUD.Server.UnitTests.Repositories
     public class CommandRepositoryUnitTests
     {
         private readonly CommandRepository commandRespository;
+        private readonly RoomContext roomContext;
 
         public CommandRepositoryUnitTests()
         {
@@ -20,27 +20,26 @@ namespace ScratchMUD.Server.UnitTests.Repositories
             var mockPlayerRepository = new Mock<IPlayerRepository>(MockBehavior.Strict);
 
             commandRespository = new CommandRepository(mockRoomRepository.Object, new EditingState(), mockPlayerRepository.Object);
+
+            roomContext = new RoomContext
+            {
+                CurrentCommandingPlayer = new ConnectedPlayer(new PlayerCharacter())
+            };
         }
 
         [Fact(DisplayName = "ExecuteCommandAsync => When provided a null command, throws an ArgumentNullException")]
         public async Task ExecuteCommandAsyncWhenProvidedANullCommandThrowsAnArgumentNullException()
         {
-            //Arrange
-            var connectedPlayer = new ConnectedPlayer(new PlayerCharacter());
-
-            //Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentNullException>(() => commandRespository.ExecuteCommandAsync(connectedPlayer, null));
+            //Arrange & Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(() => commandRespository.ExecuteCommandAsync(roomContext, null));
             Assert.Contains("cannot be null", exception.Message);
         }
 
         [Fact(DisplayName = "ExecuteCommandAsync => When provided an empty command, throws an ArgumentNullException")]
         public async Task ExecuteCommandAsyncWhenProvidedAnEmptyCommandThrowsAnArgumentNullException()
         {
-            //Arrange
-            var connectedPlayer = new ConnectedPlayer(new PlayerCharacter());
-
-            //Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentNullException>(() => commandRespository.ExecuteCommandAsync(connectedPlayer, string.Empty));
+            //Arrange & Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(() => commandRespository.ExecuteCommandAsync(roomContext, string.Empty));
             Assert.Contains("cannot be null", exception.Message);
         }
 
@@ -48,12 +47,10 @@ namespace ScratchMUD.Server.UnitTests.Repositories
         public async Task ExecuteCommandAsyncWhenProvidedAnInvalidCommandThrowsAnArgumentException()
         {
             //Arrange
-            var connectedPlayer = new ConnectedPlayer(new PlayerCharacter());
-
             const string NOT_A_VALID_COMMAND = "not_a_valid_command";
 
             //Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => commandRespository.ExecuteCommandAsync(connectedPlayer, NOT_A_VALID_COMMAND));
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => commandRespository.ExecuteCommandAsync(roomContext, NOT_A_VALID_COMMAND));
             Assert.Contains("not a valid command", exception.Message);
             Assert.Contains(NOT_A_VALID_COMMAND, exception.Message);
         }
@@ -62,34 +59,30 @@ namespace ScratchMUD.Server.UnitTests.Repositories
         public async Task ExecuteCommandAsyncWhenProvidedAValidCommandThatCommandIsExecuted()
         {
             //Arrange
-            var connectedPlayer = new ConnectedPlayer(new PlayerCharacter());
-
             const string VALID_COMMAND = "say";
 
             //Act
-            var output = await commandRespository.ExecuteCommandAsync(connectedPlayer, VALID_COMMAND);
+            var output = await commandRespository.ExecuteCommandAsync(roomContext, VALID_COMMAND);
 
             //Assert
-            Assert.NotNull(output);
-            Assert.Single(output);
+            Assert.Empty(output);
+            Assert.True(roomContext.CurrentCommandingPlayer.MessageQueueCount == 1);
         }
 
         [Fact(DisplayName = "ExecuteCommandAsync => When provided a valid command, and there is a queued command, both commands are executed")]
         public async Task ExecuteCommandAsyncWhenProvidedAValidCommandAndThereIsAQueuedCommandBothCommandsAreExecuted()
         {
             //Arrange
-            var connectedPlayer = new ConnectedPlayer(new PlayerCharacter());
-
             const string VALID_COMMAND = "say";
 
-            connectedPlayer.QueueCommand(VALID_COMMAND);
+            roomContext.CurrentCommandingPlayer.QueueCommand(VALID_COMMAND);
 
             //Act
-            var output = await commandRespository.ExecuteCommandAsync(connectedPlayer, VALID_COMMAND);
+            var output = await commandRespository.ExecuteCommandAsync(roomContext, VALID_COMMAND);
 
             //Assert
-            Assert.NotNull(output);
-            Assert.True(new List<(CommunicationChannel, string)>(output).Count == 2);
+            Assert.Empty(output);
+            Assert.True(roomContext.CurrentCommandingPlayer.MessageQueueCount == 2);
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using ScratchMUD.Server.Infrastructure;
-using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,10 +18,13 @@ namespace ScratchMUD.Server.Commands
             Name = NAME;
             SyntaxHelp = "HELP or HELP <COMMAND>";
             GeneralHelp = "Returns helpful information about available commands.";
+            MaximumParameterCount = 1;
         }
 
-        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, params string[] parameters)
+        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(RoomContext roomContext, params string[] parameters)
         {
+            ThrowInvalidCommandSyntaxExceptionIfTooManyParameters(parameters);
+
             var output = new List<(CommunicationChannel, string)>();
 
             if (parameters.Length == 0)
@@ -31,24 +33,20 @@ namespace ScratchMUD.Server.Commands
 
                 foreach (var command in availableCommands)
                 {
-                    output.Add((CommunicationChannel.Self, command));
+                    roomContext.CurrentCommandingPlayer.QueueMessage(command);
                 }
             }
-            else if (parameters.Length == 1)
+            else //parameters.Length == 1
             {
                 if (commandDictionary.ContainsKey(parameters[0]))
                 {
-                    output.Add((CommunicationChannel.Self, commandDictionary[parameters[0]].SyntaxHelp));
-                    output.Add((CommunicationChannel.Self, commandDictionary[parameters[0]].GeneralHelp));
+                    roomContext.CurrentCommandingPlayer.QueueMessage(commandDictionary[parameters[0]].SyntaxHelp);
+                    roomContext.CurrentCommandingPlayer.QueueMessage(commandDictionary[parameters[0]].GeneralHelp);
                 }
                 else
                 {
-                    output.Add((CommunicationChannel.Self, $"No help found for '{parameters[0]}'."));
+                    roomContext.CurrentCommandingPlayer.QueueMessage($"No help found for '{parameters[0]}'.");
                 }
-            }
-            else
-            {
-                output.Add((CommunicationChannel.Self, InvalidSyntaxErrorText));
             }
 
             return Task.Run(() => output);

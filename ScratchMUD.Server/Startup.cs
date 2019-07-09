@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ScratchMUD.Server.Cache;
 using ScratchMUD.Server.EntityFramework;
 using ScratchMUD.Server.HostedServices;
 using ScratchMUD.Server.Hubs;
@@ -36,6 +37,9 @@ namespace ScratchMUD.Server
             services.AddScoped<IPlayerRepository, PlayerRepository>();
             services.AddSingleton<EditingState>();
             services.AddSingleton<IPlayerConnections, PlayerConnections>();
+            services.AddSingleton<IAreaCache, AreaCache>();
+            services.AddScoped<IAreaCacheManager, AreaCacheManager>();
+            services.AddScoped<INpcRepository, NpcRepository>();
             services.AddDbContext<ScratchMUDContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("ScratchMudServer"))
             );

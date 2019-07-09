@@ -7,6 +7,6 @@ namespace ScratchMUD.Server.Repositories
 {
     public interface ICommandRepository
     {
-        Task<IEnumerable<(CommunicationChannel, string)>> ExecuteCommandAsync(ConnectedPlayer connectedPlayer, string command, params string[] parameters);
+        Task<IEnumerable<(CommunicationChannel, string)>> ExecuteCommandAsync(RoomContext roomContext, string command, params string[] parameters);
     }
 }

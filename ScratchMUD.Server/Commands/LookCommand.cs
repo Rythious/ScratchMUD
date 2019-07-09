@@ -12,9 +12,7 @@ namespace ScratchMUD.Server.Commands
         internal const string NAME = "look";
         private readonly IRoomRepository roomRepository;
 
-        public LookCommand(
-            IRoomRepository roomRepository
-        )
+        public LookCommand(IRoomRepository roomRepository)
         {
             this.roomRepository = roomRepository;
 
@@ -24,17 +22,27 @@ namespace ScratchMUD.Server.Commands
             MaximumParameterCount = 0;
         }
 
-        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, params string[] parameters)
+        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(RoomContext roomContext, params string[] parameters)
         {
             ThrowInvalidCommandSyntaxExceptionIfTooManyParameters(parameters);
 
-            var roomDetails = roomRepository.GetRoomWithTranslatedValues(connectedPlayer.RoomId);
+            var roomDetails = roomRepository.GetRoomWithTranslatedValues(roomContext.CurrentCommandingPlayer.RoomId);
 
             var exitsOutputString = BuildExitsString(roomDetails.Exits);
 
-            List<(CommunicationChannel, string)> output = BuildOutputMessages(roomDetails, exitsOutputString);
+            List<string> output = BuildOutputMessages(roomDetails, exitsOutputString);
 
-            return Task.Run(() => output);
+            if (roomContext.NpcsInTheRoom != null && roomContext.NpcsInTheRoom.Any())
+            {
+                output.AddRange(roomContext.NpcsInTheRoom.Select(n => $"{n.ShortDescription} is here.").ToList());
+            }
+
+            foreach (var message in output)
+            {
+                roomContext.CurrentCommandingPlayer.QueueMessage(message);
+            }
+
+            return Task.Run(() => new List<(CommunicationChannel, string)>());
         }
         private string BuildExitsString(HashSet<(Directions, int)> exits)
         {
@@ -48,19 +56,14 @@ namespace ScratchMUD.Server.Commands
             return $"[Exits: {string.Join(", ", availableExits)}]";
         }
 
-        private static List<(CommunicationChannel, string)> BuildOutputMessages(Models.Room roomDetails, string exitsOutputString)
+        private static List<string> BuildOutputMessages(Models.Room roomDetails, string exitsOutputString)
         {
-            var output = new List<(CommunicationChannel, string)>
+            var output = new List<string>
             {
-                (CommunicationChannel.Self, roomDetails.Title),
-                (CommunicationChannel.Self, roomDetails.FullDescription),
-                (CommunicationChannel.Self, exitsOutputString)
+                roomDetails.Title,
+                roomDetails.FullDescription,
+                exitsOutputString
             };
-
-            if (roomDetails.Npcs != null)
-            {
-                output.AddRange(roomDetails.Npcs.Select(n => (CommunicationChannel.Self, $"{n.ShortDescription} is here.")).ToList());
-            }
 
             return output;
         }

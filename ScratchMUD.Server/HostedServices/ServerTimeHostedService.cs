@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ScratchMUD.Server.Hubs;
+using ScratchMUD.Server.Infrastructure;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,9 +14,18 @@ namespace ScratchMUD.Server.HostedServices
         private readonly IHubContext<EventHub> _hubContext;
         private Timer _timer;
 
-        public ServerTimeHostedService(IHubContext<EventHub> hubContext)
+        public ServerTimeHostedService(
+            IHubContext<EventHub> hubContext,
+            IServiceScopeFactory serviceScopeFactory
+        )
         {
             _hubContext = hubContext;
+
+            using (var scope = serviceScopeFactory.CreateScope())
+            {
+                var areaCacheManager = scope.ServiceProvider.GetRequiredService<IAreaCacheManager>();
+                areaCacheManager.LoadArea(1);
+            }
         }
 
         public async void TrackMinutes(object state)

@@ -1,5 +1,6 @@
 ﻿using ScratchMUD.Server.Models;
 using ScratchMUD.Server.Models.Constants;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Repositories
@@ -12,5 +13,6 @@ namespace ScratchMUD.Server.Repositories
         Task UpdateFullDescription(int roomId, string fullDescription);
         Task CreateNewRoom(int originatingRoomId, Directions directionOfNewRoom);
         int GetRoomIdByAreaAndVirtualNumber(int areaId, int virtualNumber);
+        IEnumerable<int> GetRoomIdsByAreaId(int areaId);
     }
 }

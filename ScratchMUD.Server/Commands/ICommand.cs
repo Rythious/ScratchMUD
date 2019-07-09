@@ -8,9 +8,8 @@ namespace ScratchMUD.Server.Commands
     internal interface ICommand
     {
         string Name { get; }
-        Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, params string[] parameters);
+        Task<List<(CommunicationChannel, string)>> ExecuteAsync(RoomContext roomContext, params string[] parameters);
         string SyntaxHelp { get; }
-
         string GeneralHelp { get; }
     }
 }

@@ -16,20 +16,23 @@ namespace ScratchMUD.Server.Commands
             GeneralHelp = "Your character speaks to the other characters in the room.";
         }
 
-        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(ConnectedPlayer connectedPlayer, params string[] parameters)
+        public Task<List<(CommunicationChannel, string)>> ExecuteAsync(RoomContext roomContext, params string[] parameters)
         {
-            var output = (CommunicationChannel.Self, string.Empty);
-
             if (parameters.Length > 0)
             {
-                output = (CommunicationChannel.Room, $"{connectedPlayer.Name} says \"{string.Join(" ", parameters)}\"");
+                roomContext.CurrentCommandingPlayer.QueueMessage($"You say \"{string.Join(" ", parameters)}\"");
+
+                foreach (var player in roomContext.OtherPlayersInTheRoom)
+                {
+                    player.QueueMessage($"{roomContext.CurrentCommandingPlayer.Name} says \"{string.Join(" ", parameters)}\"");
+                }
             }
             else
             {
-                output = (CommunicationChannel.Self, $"You open your mouth as if to say something, but there are no words.");
+                roomContext.CurrentCommandingPlayer.QueueMessage($"You open your mouth as if to say something, but there are no words.");
             }
 
-            return Task.Run(() => new List<(CommunicationChannel, string)> { output });
+            return Task.Run(() => new List<(CommunicationChannel, string)>());
         }
     }
 }

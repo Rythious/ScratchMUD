@@ -1,8 +1,8 @@
 using Moq;
 using ScratchMUD.Server.Commands;
 using ScratchMUD.Server.EntityFramework;
+using ScratchMUD.Server.Exceptions;
 using ScratchMUD.Server.Infrastructure;
-using ScratchMUD.Server.Models.Constants;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -12,6 +12,16 @@ namespace ScratchMUD.Server.UnitTests.Commands
 {
     public class HelpCommandUnitTests
     {
+        private readonly RoomContext roomContext;
+
+        public HelpCommandUnitTests()
+        {
+            roomContext = new RoomContext
+            {
+                CurrentCommandingPlayer = new ConnectedPlayer(new PlayerCharacter())
+            };
+        }
+
         [Fact(DisplayName = "Name => Returns Help")]
         public void NameReturnsHelp()
         {
@@ -53,6 +63,18 @@ namespace ScratchMUD.Server.UnitTests.Commands
             Assert.False(string.IsNullOrEmpty(result));
         }
 
+        [Fact(DisplayName = "ExecuteAsync => When provided with too many parameters, throws InvalidCommandSyntaxException")]
+        public async void ExecuteAsyncWhenProvidedWithTooManyParametersThrowsInvalidCommandSyntaxException()
+        {
+            //Arrange
+            var helpCommand = new HelpCommand(new Dictionary<string, ICommand>());
+
+            var tooManyParameters = new string[2] { "one", "two" };
+
+            //Act & Assert
+            var exception = await Assert.ThrowsAsync<InvalidCommandSyntaxException>(() => helpCommand.ExecuteAsync(roomContext, tooManyParameters));
+        }
+
         [Fact(DisplayName = "ExecuteAsync => When no parameters are sent in, the available commands are listed in alphabetical order")]
         public async Task ExecuteAsyncWhenNoParametersAreSentInTheAvailableCommandsAreListedInAlphabeticalOrder()
         {
@@ -69,23 +91,18 @@ namespace ScratchMUD.Server.UnitTests.Commands
             };
 
             var helpCommand = new HelpCommand(commandDictionary);
-
+            
             //Act
-            var result = await helpCommand.ExecuteAsync(new ConnectedPlayer(new PlayerCharacter()));
+            var result = await helpCommand.ExecuteAsync(roomContext);
 
             //Assert
             Assert.NotNull(result);
-            Assert.True(result.Count == 4);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[1].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[2].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[3].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Contains("available commands", result[0].Item2, StringComparison.OrdinalIgnoreCase);
-            Assert.Equal(ALPHABETICALLY_FIRST_COMMAND, result[1].Item2);
-            Assert.Equal(ALPHABETICALLY_SECOND_COMMAND, result[2].Item2);
-            Assert.Equal(ALPHABETICALLY_THIRD_COMMAND, result[3].Item2);
+            Assert.True(result.Count == 0);
+            Assert.True(roomContext.CurrentCommandingPlayer.MessageQueueCount == 4);
+            Assert.Contains("available commands", roomContext.CurrentCommandingPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(ALPHABETICALLY_FIRST_COMMAND, roomContext.CurrentCommandingPlayer.DequeueMessage());
+            Assert.Equal(ALPHABETICALLY_SECOND_COMMAND, roomContext.CurrentCommandingPlayer.DequeueMessage());
+            Assert.Equal(ALPHABETICALLY_THIRD_COMMAND, roomContext.CurrentCommandingPlayer.DequeueMessage());
         }
 
         [Fact(DisplayName = "ExecuteAsync => When a parameter is passed in but does not match any available commands, an error message is returned")]
@@ -100,17 +117,15 @@ namespace ScratchMUD.Server.UnitTests.Commands
             };
 
             var helpCommand = new HelpCommand(commandDictionary);
-
+            
             //Act
-            var result = await helpCommand.ExecuteAsync(new ConnectedPlayer(new PlayerCharacter()), "not" + COMMAND1_NAME);
+            var result = await helpCommand.ExecuteAsync(roomContext, "not" + COMMAND1_NAME);
 
             //Assert
             Assert.NotNull(result);
-            Assert.True(result.Count == 1);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Contains("no help found", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+            Assert.True(result.Count == 0);
+            Assert.True(roomContext.CurrentCommandingPlayer.MessageQueueCount == 1);
+            Assert.Contains("no help found", roomContext.CurrentCommandingPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact(DisplayName = "ExecuteAsync => When a parameter is passed that matches an available command, two messages are returned")]
@@ -132,38 +147,15 @@ namespace ScratchMUD.Server.UnitTests.Commands
             var helpCommand = new HelpCommand(commandDictionary);
 
             //Act
-            var result = await helpCommand.ExecuteAsync(new ConnectedPlayer(new PlayerCharacter()), COMMAND1_NAME);
+            var result = await helpCommand.ExecuteAsync(roomContext, COMMAND1_NAME);
 
             //Assert
             mockHelpCommand.VerifyAll();
             Assert.NotNull(result);
-            Assert.True(result.Count == 2);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[1].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.False(string.IsNullOrEmpty(result[0].Item2));
-            Assert.False(string.IsNullOrEmpty(result[1].Item2));
-        }
-
-        [Fact(DisplayName = "ExecuteAsync => When two parameters are passed in, an error message is returned")]
-        public async Task ExecuteAsyncWhenTwoParametersArePassedInAnErrorMessageIsReturned()
-        {
-            //Arrange
-            var commandDictionary = new Dictionary<string, ICommand>();
-
-            var helpCommand = new HelpCommand(commandDictionary);
-
-            //Act
-            var result = await helpCommand.ExecuteAsync(new ConnectedPlayer(new PlayerCharacter()), "one", "two");
-
-            //Assert
-            Assert.NotNull(result);
-            Assert.True(result.Count == 1);
-            Assert.IsAssignableFrom<CommunicationChannel>(result[0].Item1);
-            Assert.Equal(CommunicationChannel.Self, result[0].Item1);
-            Assert.IsAssignableFrom<string>(result[0].Item2);
-            Assert.Contains("invalid syntax", result[0].Item2, StringComparison.OrdinalIgnoreCase);
+            Assert.True(result.Count == 0);
+            Assert.True(roomContext.CurrentCommandingPlayer.MessageQueueCount == 2);
+            Assert.False(string.IsNullOrEmpty(roomContext.CurrentCommandingPlayer.DequeueMessage()));
+            Assert.False(string.IsNullOrEmpty(roomContext.CurrentCommandingPlayer.DequeueMessage()));
         }
     }
 }

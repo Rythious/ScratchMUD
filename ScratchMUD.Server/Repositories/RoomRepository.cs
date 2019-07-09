@@ -16,6 +16,11 @@ namespace ScratchMUD.Server.Repositories
             this.context = context;
         }
 
+        public IEnumerable<int> GetRoomIdsByAreaId(int areaId)
+        {
+            return context.Room.Where(r => r.AreaId == areaId).Select(r => r.RoomId).ToList();
+        }
+
         public string GetRoomFullDescription(int roomId)
         {
             return context.RoomTranslation.Single(rt => rt.RoomId == roomId).FullDescription;
@@ -26,20 +31,6 @@ namespace ScratchMUD.Server.Repositories
             var room = context.Room.Single(r => r.RoomId == roomId);
             var roomTranslation = context.RoomTranslation.SingleOrDefault(rt => rt.LanguageId == 1 && rt.RoomId == roomId);
             var authoringPlayerCharacter = context.PlayerCharacter.Single(pc => pc.PlayerCharacterId == room.CreatedByPlayerId);
-            var npcsInTheRoom = context.RoomNpc.Where(rn => rn.RoomId == roomId).Select(rn => rn.NpcId).ToList();
-            var npcTranslationRecords = context.NpcTranslation.Where(nt => npcsInTheRoom.Distinct().Contains(nt.NpcId)).ToList();
-
-            var npcModels = new List<Models.Npc>();
-
-            foreach (var npcId in npcsInTheRoom)
-            {
-                npcModels.Add(new Models.Npc
-                {
-                    Id = npcId,
-                    ShortDescription = npcTranslationRecords.Single(n => n.NpcId == npcId).ShortDescription,
-                    FullDescription = npcTranslationRecords.Single(n => n.NpcId == npcId).FullDescription
-                });
-            }
 
             return new Models.Room
             {
@@ -49,8 +40,7 @@ namespace ScratchMUD.Server.Repositories
                 AreaId = room.AreaId,
                 Exits = BuildExitsHashSetFromRoomData(room),
                 Author = authoringPlayerCharacter.Name,
-                Title = roomTranslation?.Title,
-                Npcs = npcModels
+                Title = roomTranslation?.Title
             };
         }
 

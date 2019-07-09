@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using ScratchMUD.Server.Cache;
 using ScratchMUD.Server.Commands;
 using ScratchMUD.Server.Exceptions;
 using ScratchMUD.Server.Infrastructure;
@@ -6,6 +7,7 @@ using ScratchMUD.Server.Models.Constants;
 using ScratchMUD.Server.Repositories;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.Hubs
@@ -15,16 +17,19 @@ namespace ScratchMUD.Server.Hubs
         private readonly ICommandRepository commandRepository;
         private readonly IPlayerConnections playerConnections;
         private readonly IPlayerRepository playerRepository;
+        private readonly IAreaCache areaCache;
 
         public EventHub(
             ICommandRepository commandRepository,
             IPlayerConnections playerConnections,
-            IPlayerRepository playerRepository
+            IPlayerRepository playerRepository,
+            IAreaCache areaCache
         )
         {
             this.commandRepository = commandRepository;
             this.playerConnections = playerConnections;
             this.playerRepository = playerRepository;
+            this.areaCache = areaCache;
         }
 
         public override Task OnConnectedAsync()
@@ -32,10 +37,14 @@ namespace ScratchMUD.Server.Hubs
             Task.Run(() => SendMessageToProperChannel((CommunicationChannel.Everyone, $"A new client has connected on {Context.ConnectionId}.")));
 
             var availableCharacterId = playerConnections.GetAvailablePlayerCharacterId();
-            var playerCharacter = playerRepository.GetPlayerCharacter(availableCharacterId);
-            playerConnections.AddConnectedPlayer(Context.ConnectionId, new ConnectedPlayer(playerCharacter));
 
-            Task.Run(() => SendMessageToProperChannel((CommunicationChannel.Self, $"You are playing as {playerCharacter.Name}.")));
+            var playerCharacter = playerRepository.GetPlayerCharacter(availableCharacterId);
+
+            var connectedPlayer = new ConnectedPlayer(playerCharacter);
+
+            playerConnections.AddConnectedPlayer(Context.ConnectionId, connectedPlayer);
+
+            Task.Run(() => connectedPlayer.QueueMessage($"You are playing as {playerCharacter.Name}."));
 
             ExecuteClientCommand(LookCommand.NAME).GetAwaiter().GetResult();
 
@@ -59,11 +68,19 @@ namespace ScratchMUD.Server.Hubs
                 overrideClientReturnMethod = "ReceiveRoomMessage";
             }
 
+            var player = playerConnections.GetConnectedPlayerByConnectionId(Context.ConnectionId);
+            var playersInRoom = playerConnections.GetConnectedPlayersInTheSameRoomAsAConnection(Context.ConnectionId);
+
+            var roomContext = new RoomContext
+            {
+                CurrentCommandingPlayer = player,
+                OtherPlayersInTheRoom = playersInRoom.Except(new List<ConnectedPlayer> { player }),
+                NpcsInTheRoom = areaCache.GetNpcsInRoom(player.RoomId)
+            };
+
             try
             {
-                var player = playerConnections.GetConnectedPlayerByConnectionId(Context.ConnectionId);
-
-                var outputMessages = await commandRepository.ExecuteCommandAsync(player, command, parameters);
+                var outputMessages = await commandRepository.ExecuteCommandAsync(roomContext, command, parameters);
 
                 if (string.IsNullOrEmpty(overrideClientReturnMethod))
                 {
@@ -73,18 +90,20 @@ namespace ScratchMUD.Server.Hubs
                 {
                     await SendMessagesToProperChannels(outputMessages, overrideClientReturnMethod);
                 }
+
+                roomContext.AllPlayersInTheRoom.ToList().ForEach(async p => await SendAllQueuedMessages(p));
             }
             catch (ArgumentException ex)
             {
-                var output = (CommunicationChannel.Self, ex.Message);
+                roomContext.CurrentCommandingPlayer.QueueMessage(ex.Message);
 
-                await SendMessagesToProperChannels(new List<(CommunicationChannel CommChannel, string Message)> { output });
+                await SendAllQueuedMessages(roomContext.CurrentCommandingPlayer);
             }
             catch (InvalidCommandSyntaxException ex)
             {
-                var output = (CommunicationChannel.Self, ex.Message);
+                roomContext.CurrentCommandingPlayer.QueueMessage(ex.Message);
 
-                await SendMessagesToProperChannels(new List<(CommunicationChannel CommChannel, string Message)> { output });
+                await SendAllQueuedMessages(roomContext.CurrentCommandingPlayer);
             }
         }
 
@@ -97,20 +116,22 @@ namespace ScratchMUD.Server.Hubs
         {
             foreach (var outputItem in outputMessages)
             {
-                if (outputItem.CommChannel == CommunicationChannel.Self)
-                {
-                    await Clients.Client(Context.ConnectionId).SendAsync(clientReturnMethod, outputItem.Message);
-                }
-                else if (outputItem.CommChannel == CommunicationChannel.Room)
-                {
-                    List<string> connectionsInSameRoom = playerConnections.GetConnectedPlayersInTheSameRoomAsAConnection(Context.ConnectionId);
-
-                    await Clients.Clients(connectionsInSameRoom).SendAsync(clientReturnMethod, outputItem.Message);
-                }
-                else if (outputItem.CommChannel == CommunicationChannel.Everyone)
+                if (outputItem.CommChannel == CommunicationChannel.Everyone)
                 {
                     await Clients.All.SendAsync(clientReturnMethod, outputItem.Message);
                 }
+            }
+        }
+
+        private async Task SendAllQueuedMessages(ConnectedPlayer connectedPlayer)
+        {
+            var connectionId = playerConnections.GetConnectionOfConnectedPlayer(connectedPlayer);
+
+            while (connectedPlayer.MessageQueueCount > 0)
+            {
+                var message = connectedPlayer.DequeueMessage();
+
+                await Clients.Client(connectionId).SendAsync("ReceiveServerCreatedMessage", message);
             }
         }
     }

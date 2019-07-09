@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using ScratchMUD.Server.EntityFramework;
-using ScratchMUD.Server.Repositories;
 
 namespace ScratchMUD.Server.Infrastructure
 {
@@ -9,6 +7,7 @@ namespace ScratchMUD.Server.Infrastructure
         ConnectedPlayer GetConnectedPlayerByConnectionId(string signalRConnectionId);
         int GetAvailablePlayerCharacterId();
         void AddConnectedPlayer(string signalRConnectionId, ConnectedPlayer connectedPlayer);
-        List<string> GetConnectedPlayersInTheSameRoomAsAConnection(string connectionId);
+        string GetConnectionOfConnectedPlayer(ConnectedPlayer connectedPlayer);
+        List<ConnectedPlayer> GetConnectedPlayersInTheSameRoomAsAConnection(string connectionId);
     }
 }
