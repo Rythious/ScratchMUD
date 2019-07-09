@@ -1,20 +1,20 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ScratchMUD.Server.Cache;
 using ScratchMUD.Server.Hubs;
-using ScratchMUD.Server.Infrastructure;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ScratchMUD.Server.HostedServices
 {
-    public class ServerTimeHostedService : IHostedService, IDisposable
+    public class AreaRefreshHostedService : IHostedService, IDisposable
     {
         private readonly IHubContext<EventHub> _hubContext;
         private Timer _timer;
 
-        public ServerTimeHostedService(
+        public AreaRefreshHostedService(
             IHubContext<EventHub> hubContext,
             IServiceScopeFactory serviceScopeFactory
         )
@@ -35,7 +35,7 @@ namespace ScratchMUD.Server.HostedServices
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _timer = new Timer(TrackMinutes, null, TimeSpan.FromMilliseconds(1000 - DateTime.Now.Millisecond), TimeSpan.FromMinutes(15));
+            _timer = new Timer(TrackMinutes, null, TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(15));
 
             return Task.CompletedTask;
         }

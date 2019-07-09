@@ -1,4 +1,5 @@
-﻿using ScratchMUD.Server.Commands;
+﻿using ScratchMUD.Server.Combat;
+using ScratchMUD.Server.Commands;
 using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models.Constants;
 using System;
@@ -14,7 +15,8 @@ namespace ScratchMUD.Server.Repositories
         public CommandRepository(
             IRoomRepository roomRepository,
             EditingState editingState,
-            IPlayerRepository playerRepository
+            IPlayerRepository playerRepository,
+            IPlayerCombatHostedService playerCombatHostedService
         )
         {
             CommandDictionary = new Dictionary<string, ICommand>
@@ -28,7 +30,8 @@ namespace ScratchMUD.Server.Repositories
                 [Directions.West.ToString().ToLower()] = new MoveCommand(Directions.West, roomRepository, playerRepository),
                 [Directions.Up.ToString().ToLower()] = new MoveCommand(Directions.Up, roomRepository, playerRepository),
                 [Directions.Down.ToString().ToLower()] = new MoveCommand(Directions.Down, roomRepository, playerRepository),
-                [PokeCommand.NAME] = new PokeCommand()
+                [PokeCommand.NAME] = new PokeCommand(),
+                [AttackCommand.NAME] = new AttackCommand(playerCombatHostedService)
             };
 
             CommandDictionary[HelpCommand.NAME] = new HelpCommand(CommandDictionary);

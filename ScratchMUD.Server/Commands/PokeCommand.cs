@@ -13,7 +13,7 @@ namespace ScratchMUD.Server.Commands
         public PokeCommand()
         {
             Name = NAME;
-            SyntaxHelp = "poke <TARGET>";
+            SyntaxHelp = $"{NAME.ToUpper()} <TARGET>";
             GeneralHelp = "Your character pokes another character in the room.";
             MaximumParameterCount = 1;
         }
@@ -42,9 +42,11 @@ namespace ScratchMUD.Server.Commands
                     }
                     else
                     {
-                        playerDoingThePoking.QueueMessage($"You poked {npc.ShortDescription}.");
+                        var npcTarget = (Npc)npc;
 
-                        QueueMessagesForWitnessingPlayers(roomContext.OtherPlayersInTheRoom, $"{playerDoingThePoking.Name} poked {npc.ShortDescription}.");
+                        playerDoingThePoking.QueueMessage($"You poked {npcTarget.ShortDescription}.");
+
+                        QueueMessagesForWitnessingPlayers(roomContext.OtherPlayersInTheRoom, $"{playerDoingThePoking.Name} poked {npcTarget.ShortDescription}.");
                     }
                 }
                 else if (targetOfPoke == playerDoingThePoking)
@@ -55,11 +57,13 @@ namespace ScratchMUD.Server.Commands
                 }
                 else
                 {
-                    playerDoingThePoking.QueueMessage($"You poked {targetOfPoke.Name}");
+                    var playerTarget = (ConnectedPlayer)targetOfPoke;
 
-                    targetOfPoke.QueueMessage($"{playerDoingThePoking.Name} poked you.  Ouch!");
+                    playerDoingThePoking.QueueMessage($"You poked {playerTarget.Name}");
 
-                    QueueMessagesForWitnessingPlayers(roomContext.OtherPlayersInTheRoom.Except(new List<ConnectedPlayer> { targetOfPoke }), $"{playerDoingThePoking.Name} poked {targetOfPoke.Name}.");
+                    playerTarget.QueueMessage($"{playerDoingThePoking.Name} poked you.  Ouch!");
+
+                    QueueMessagesForWitnessingPlayers(roomContext.OtherPlayersInTheRoom.Except(new List<ConnectedPlayer> { playerTarget }), $"{playerDoingThePoking.Name} poked {playerTarget.Name}.");
                 }
             }
 

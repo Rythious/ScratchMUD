@@ -36,27 +36,33 @@ namespace ScratchMUD.Server.Hubs
         {
             Task.Run(() => SendMessageToProperChannel((CommunicationChannel.Everyone, $"A new client has connected on {Context.ConnectionId}.")));
 
-            var availableCharacterId = playerConnections.GetAvailablePlayerCharacterId();
+            ConnectedPlayer connectedPlayer = GetAvailablePlayerAsConnectedPlayer();
 
-            var playerCharacter = playerRepository.GetPlayerCharacter(availableCharacterId);
+            connectedPlayer.SignalRConnectionId = Context.ConnectionId;
 
-            var connectedPlayer = new ConnectedPlayer(playerCharacter);
-
-            playerConnections.AddConnectedPlayer(Context.ConnectionId, connectedPlayer);
-
-            Task.Run(() => connectedPlayer.QueueMessage($"You are playing as {playerCharacter.Name}."));
+            Task.Run(() => connectedPlayer.QueueMessage($"You are playing as {connectedPlayer.Name}."));
 
             ExecuteClientCommand(LookCommand.NAME).GetAwaiter().GetResult();
 
             return base.OnConnectedAsync();
         }
 
-        public async Task RelayClientMessage(string message)
+        private ConnectedPlayer GetAvailablePlayerAsConnectedPlayer()
         {
-            await ExecuteClientCommand(message);
+            var availableCharacterId = playerConnections.GetAvailablePlayerCharacterId();
+
+            var playerCharacter = playerRepository.GetPlayerCharacter(availableCharacterId);
+
+            var connectedPlayer = new ConnectedPlayer(playerCharacter);
+
+            connectedPlayer.SignalRConnectionId = Context.ConnectionId;
+
+            playerConnections.AddConnectedPlayer(connectedPlayer);
+
+            return connectedPlayer;
         }
 
-        private async Task ExecuteClientCommand(string message)
+        public async Task ExecuteClientCommand(string message)
         {
             var command = CommandParser.SplitCommandFromParameters(message, out string[] parameters);
 
@@ -69,7 +75,7 @@ namespace ScratchMUD.Server.Hubs
             }
 
             var player = playerConnections.GetConnectedPlayerByConnectionId(Context.ConnectionId);
-            var playersInRoom = playerConnections.GetConnectedPlayersInTheSameRoomAsAConnection(Context.ConnectionId);
+            var playersInRoom = playerConnections.GetConnectedPlayersInARoom(player.RoomId);
 
             var roomContext = new RoomContext
             {
@@ -107,7 +113,7 @@ namespace ScratchMUD.Server.Hubs
             }
         }
 
-        public async Task SendMessageToProperChannel((CommunicationChannel CommChannel, string Message) channeledMessage)
+        private async Task SendMessageToProperChannel((CommunicationChannel CommChannel, string Message) channeledMessage)
         {
             await SendMessagesToProperChannels(new List<(CommunicationChannel, string)> { channeledMessage });
         }
@@ -125,13 +131,11 @@ namespace ScratchMUD.Server.Hubs
 
         private async Task SendAllQueuedMessages(ConnectedPlayer connectedPlayer)
         {
-            var connectionId = playerConnections.GetConnectionOfConnectedPlayer(connectedPlayer);
-
             while (connectedPlayer.MessageQueueCount > 0)
             {
                 var message = connectedPlayer.DequeueMessage();
 
-                await Clients.Client(connectionId).SendAsync("ReceiveServerCreatedMessage", message);
+                await Clients.Client(connectedPlayer.SignalRConnectionId).SendAsync("ReceiveServerCreatedMessage", message);
             }
         }
     }

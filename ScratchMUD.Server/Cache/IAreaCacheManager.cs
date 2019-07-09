@@ -1,4 +1,4 @@
-﻿namespace ScratchMUD.Server.Infrastructure
+﻿namespace ScratchMUD.Server.Cache
 {
     public interface IAreaCacheManager
     {

@@ -2,7 +2,6 @@
 using ScratchMUD.Server.EntityFramework;
 using ScratchMUD.Server.Exceptions;
 using ScratchMUD.Server.Infrastructure;
-using ScratchMUD.Server.Models;
 using System;
 using System.Collections.Generic;
 using Xunit;
@@ -15,7 +14,7 @@ namespace ScratchMUD.Server.UnitTests.Commands
         private readonly ConnectedPlayer commandingPlayer;
         private readonly ConnectedPlayer possibleTargetPlayer;
         private readonly ConnectedPlayer witnessingPlayer;
-        private readonly Models.Npc scaryNpc;
+        private readonly Server.Infrastructure.Npc scaryNpc;
         private readonly RoomContext roomContext;
 
         public PokeCommandUnitTests()
@@ -37,13 +36,13 @@ namespace ScratchMUD.Server.UnitTests.Commands
                 Name = "witnessingPlayer"
             });
 
-            scaryNpc = new Models.Npc { ShortDescription = "Scary Npc" };
+            scaryNpc = new Server.Infrastructure.Npc { ShortDescription = "Scary Npc" };
 
             roomContext = new RoomContext
             {
                 CurrentCommandingPlayer = commandingPlayer,
                 OtherPlayersInTheRoom = new List<ConnectedPlayer> { possibleTargetPlayer, witnessingPlayer },
-                NpcsInTheRoom = new List<Models.Npc> { scaryNpc }
+                NpcsInTheRoom = new List<Server.Infrastructure.Npc> { scaryNpc }
             };
         }
 

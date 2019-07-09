@@ -12,7 +12,7 @@ namespace ScratchMUD.Server.Commands
         public SayCommand()
         {
             Name = NAME;
-            SyntaxHelp = "SAY <VALUE>";
+            SyntaxHelp = $"{NAME.ToUpper()} <VALUE>";
             GeneralHelp = "Your character speaks to the other characters in the room.";
         }
 

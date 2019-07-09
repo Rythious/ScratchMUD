@@ -17,7 +17,7 @@ namespace ScratchMUD.Server.Commands
             this.roomRepository = roomRepository;
 
             Name = NAME;
-            SyntaxHelp = "LOOK";
+            SyntaxHelp = $"{NAME.ToUpper()}";
             GeneralHelp = "Looks at the details of the current room.";
             MaximumParameterCount = 0;
         }

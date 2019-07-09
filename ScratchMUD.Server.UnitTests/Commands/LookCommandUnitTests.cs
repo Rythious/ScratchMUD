@@ -7,7 +7,9 @@ using ScratchMUD.Server.Models.Constants;
 using ScratchMUD.Server.Repositories;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Xunit;
+using Npc = ScratchMUD.Server.Infrastructure.Npc;
 
 namespace ScratchMUD.Server.UnitTests.Commands
 {
@@ -25,7 +27,8 @@ namespace ScratchMUD.Server.UnitTests.Commands
 
             roomContext = new RoomContext
             {
-                CurrentCommandingPlayer = new ConnectedPlayer(new PlayerCharacter())
+                CurrentCommandingPlayer = new ConnectedPlayer(new PlayerCharacter()),
+                NpcsInTheRoom = null
             };
         }
 
@@ -139,6 +142,44 @@ namespace ScratchMUD.Server.UnitTests.Commands
 
             //Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidCommandSyntaxException>(() => lookCommand.ExecuteAsync(roomContext, tooManyParameters));
+        }
+
+        [Fact(DisplayName = "ExecuteAsync => When a room contains Npcs, there is a description string for each")]
+        public async void ExecuteAsyncWhenARoomContainsNpcsThereIsADescriptionStringForEach()
+        {
+            //Arrange
+            var room = new Models.Room
+            {
+                Exits = new HashSet<(Directions, int)>()
+            };
+
+            mockRoomRepository.Setup(rr => rr.GetRoomWithTranslatedValues(It.IsAny<int>())).Returns(room);
+
+            var roomContextWithNpcs = new RoomContext
+            {
+                CurrentCommandingPlayer = new ConnectedPlayer(new PlayerCharacter()),
+                NpcsInTheRoom = new List<Npc>
+                {
+                    new Npc { ShortDescription = "FirstNpc" },
+                    new Npc { ShortDescription = "SecondNpc" }
+                }
+            };
+
+            //Act
+            var result = await lookCommand.ExecuteAsync(roomContextWithNpcs);
+
+            //Assert
+            mockRoomRepository.VerifyAll();
+            Assert.NotNull(result);
+            Assert.True(result.Count == 0);
+            Assert.True(roomContextWithNpcs.CurrentCommandingPlayer.MessageQueueCount == 5);
+            roomContextWithNpcs.CurrentCommandingPlayer.DequeueMessage();
+            roomContextWithNpcs.CurrentCommandingPlayer.DequeueMessage();
+            roomContextWithNpcs.CurrentCommandingPlayer.DequeueMessage();
+            var firstNpcMessage = roomContextWithNpcs.CurrentCommandingPlayer.DequeueMessage();
+            Assert.Contains(roomContextWithNpcs.NpcsInTheRoom.ElementAt(0).ShortDescription, firstNpcMessage, StringComparison.OrdinalIgnoreCase);
+            var secondNpcMessage = roomContextWithNpcs.CurrentCommandingPlayer.DequeueMessage();
+            Assert.Contains(roomContextWithNpcs.NpcsInTheRoom.ElementAt(1).ShortDescription, secondNpcMessage, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

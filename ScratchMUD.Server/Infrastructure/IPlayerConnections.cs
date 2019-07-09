@@ -6,8 +6,7 @@ namespace ScratchMUD.Server.Infrastructure
     {
         ConnectedPlayer GetConnectedPlayerByConnectionId(string signalRConnectionId);
         int GetAvailablePlayerCharacterId();
-        void AddConnectedPlayer(string signalRConnectionId, ConnectedPlayer connectedPlayer);
-        string GetConnectionOfConnectedPlayer(ConnectedPlayer connectedPlayer);
-        List<ConnectedPlayer> GetConnectedPlayersInTheSameRoomAsAConnection(string connectionId);
+        void AddConnectedPlayer(ConnectedPlayer connectedPlayer);
+        List<ConnectedPlayer> GetConnectedPlayersInARoom(int roomId);
     }
 }

@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using ScratchMUD.Server.Infrastructure;
+using System.Collections.Generic;
 
 namespace ScratchMUD.Server.Repositories
 {
     public interface INpcRepository
     {
-        IEnumerable<Models.Npc> GetNpcsByRoomId(int roomId);
+        IEnumerable<Npc> GetNpcsByRoomId(int roomId);
     }
 }

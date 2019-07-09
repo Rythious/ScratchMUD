@@ -1,8 +1,8 @@
-﻿using ScratchMUD.Server.Cache;
+﻿using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Repositories;
 using System.Collections.Generic;
 
-namespace ScratchMUD.Server.Infrastructure
+namespace ScratchMUD.Server.Cache
 {
     public class AreaCacheManager : IAreaCacheManager
     {
@@ -25,7 +25,7 @@ namespace ScratchMUD.Server.Infrastructure
         {
             IEnumerable<int> roomIds = roomRepository.GetRoomIdsByAreaId(areaId);
 
-            var npcsInTheArea = new List<Models.Npc>();
+            var npcsInTheArea = new List<Npc>();
 
             foreach (var id in roomIds)
             {

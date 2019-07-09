@@ -1,5 +1,4 @@
-﻿using ScratchMUD.Server.Models;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace ScratchMUD.Server.Infrastructure

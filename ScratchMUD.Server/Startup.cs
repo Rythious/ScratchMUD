@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ScratchMUD.Server.Cache;
+using ScratchMUD.Server.Combat;
 using ScratchMUD.Server.EntityFramework;
 using ScratchMUD.Server.HostedServices;
 using ScratchMUD.Server.Hubs;
@@ -31,7 +32,9 @@ namespace ScratchMUD.Server
             {
                 options.EnableDetailedErrors = true;
             });
-            services.AddHostedService<ServerTimeHostedService>();
+            services.AddHostedService<AreaRefreshHostedService>();
+            services.AddHostedService<PlayerCombatHostedService>();
+            services.AddSingleton<IPlayerCombatHostedService, PlayerCombatHostedService>();
             services.AddScoped<ICommandRepository, CommandRepository>();
             services.AddScoped<IRoomRepository, RoomRepository>();
             services.AddScoped<IPlayerRepository, PlayerRepository>();

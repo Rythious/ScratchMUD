@@ -16,7 +16,7 @@ namespace ScratchMUD.Server.Commands
             this.commandDictionary = commandDictionary;
 
             Name = NAME;
-            SyntaxHelp = "HELP or HELP <COMMAND>";
+            SyntaxHelp = $"{NAME.ToUpper()} or {NAME.ToUpper()} <COMMAND>";
             GeneralHelp = "Returns helpful information about available commands.";
             MaximumParameterCount = 1;
         }

@@ -57,7 +57,7 @@ function addClickEventToOutputWindowToFocusOnCommandTextField() {
     });
 }
 function sendClientMessage(message) {
-    connection.invoke("RelayClientMessage", message).catch(function (err) {
+    connection.invoke("ExecuteClientCommand", message).catch(function (err) {
         return console.error(err.toString());
     });
 }

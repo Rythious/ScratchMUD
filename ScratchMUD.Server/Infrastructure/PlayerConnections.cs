@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ScratchMUD.Server.Infrastructure
@@ -27,9 +28,14 @@ namespace ScratchMUD.Server.Infrastructure
             return null;
         }
 
-        public void AddConnectedPlayer(string signalRConnectionId, ConnectedPlayer connectedPlayer)
+        public void AddConnectedPlayer(ConnectedPlayer connectedPlayer)
         {
-            ConnectedPlayers[signalRConnectionId] = connectedPlayer;
+            if (connectedPlayer.SignalRConnectionId == null)
+            {
+                throw new ArgumentException($"ConnectedPlayer {connectedPlayer.Name} is missing a SignalR connection id.");
+            }
+
+            ConnectedPlayers[connectedPlayer.SignalRConnectionId] = connectedPlayer;
         }
 
         public int GetAvailablePlayerCharacterId()
@@ -37,18 +43,9 @@ namespace ScratchMUD.Server.Infrastructure
             return AvailablePlayerCharacterIds.Dequeue();
         }
 
-        public string GetConnectionOfConnectedPlayer(ConnectedPlayer connectedPlayer)
+        public List<ConnectedPlayer> GetConnectedPlayersInARoom(int roomId)
         {
-            var connectionId = ConnectedPlayers.Single(cp => cp.Value == connectedPlayer).Key;
-
-            return connectionId;
-        }
-
-        public List<ConnectedPlayer> GetConnectedPlayersInTheSameRoomAsAConnection(string connectionId)
-        {
-            var connectedPlayer = GetConnectedPlayerByConnectionId(connectionId);
-
-            var allConnectedPlayersInSameRoom = ConnectedPlayers.Where(cp => cp.Value.RoomId == connectedPlayer.RoomId).Select(cp => cp.Value).ToList();
+            var allConnectedPlayersInSameRoom = ConnectedPlayers.Where(cp => cp.Value.RoomId == roomId).Select(cp => cp.Value).ToList();
 
             return allConnectedPlayersInSameRoom;
         }

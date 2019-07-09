@@ -72,7 +72,7 @@ function addClickEventToOutputWindowToFocusOnCommandTextField() {
 }
 
 function sendClientMessage(message: string) {
-    connection.invoke("RelayClientMessage", message).catch(function (err: Error) {
+    connection.invoke("ExecuteClientCommand", message).catch(function (err: Error) {
         return console.error(err.toString());
     });
 }

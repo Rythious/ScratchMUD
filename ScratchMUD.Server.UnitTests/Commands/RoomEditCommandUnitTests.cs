@@ -6,7 +6,6 @@ using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Models.Constants;
 using ScratchMUD.Server.Repositories;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -260,6 +259,188 @@ namespace ScratchMUD.Server.UnitTests.Commands
             Assert.True(result.Count == 0);
             Assert.True(roomContext.CurrentCommandingPlayer.MessageQueueCount == 1);
             Assert.Contains("exception", roomContext.CurrentCommandingPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact(DisplayName = "ExecuteAsync => When passed an invalid create parameter, the invalid syntax message is returned")]
+        public async Task ExecuteAsynWhenPassedAnInvalidCreateParameterTheInvalidSyntaxMessageIsReturned()
+        {
+            //Arrange
+            EditType? editType = EditType.Room;
+            mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(roomContext.CurrentCommandingPlayer.Name, out editType)).Returns(true);
+
+            string[] testParameters = new string[1] { "create-notreal" };
+
+            //Act
+            var result = await roomEditCommand.ExecuteAsync(roomContext, testParameters);
+
+            //Assert
+            mockEditingState.VerifyAll();
+            Assert.NotNull(result);
+            Assert.True(result.Count == 0);
+            Assert.True(roomContext.CurrentCommandingPlayer.MessageQueueCount == 1);
+            Assert.Equal(roomEditCommand.InvalidSyntaxErrorText, roomContext.CurrentCommandingPlayer.DequeueMessage());
+        }
+
+        [Fact(DisplayName = "ExecuteAsync => When passed the create-north parameter, a new room is created to the north")]
+        public async Task ExecuteAsynWhenPassedTheCreateNorthParameterANewRoomIsCreatedToTheNorth()
+        {
+            //Arrange
+            EditType? editType = EditType.Room;
+            mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(roomContext.CurrentCommandingPlayer.Name, out editType)).Returns(true);
+
+            string[] testParameters = new string[1] { "create-north" };
+
+            mockRoomRepository.Setup(r => r.CreateNewRoom(It.IsAny<int>(), It.Is<Directions>(d => d == Directions.North)))
+                .Returns(Task.CompletedTask);
+
+            //Act
+            var result = await roomEditCommand.ExecuteAsync(roomContext, testParameters);
+
+            //Assert
+            mockEditingState.VerifyAll();
+            mockRoomRepository.VerifyAll();
+            Assert.NotNull(result);
+            Assert.True(result.Count == 0);
+            Assert.True(roomContext.CurrentCommandingPlayer.MessageQueueCount == 1);
+            Assert.Contains("room updated", roomContext.CurrentCommandingPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
+            Assert.True(roomContext.CurrentCommandingPlayer.CommandQueueCount == 1);
+            var command = roomContext.CurrentCommandingPlayer.DequeueCommand();
+            Assert.Contains(Directions.North.ToString(), command, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact(DisplayName = "ExecuteAsync => When passed the create-east parameter, a new room is created to the east")]
+        public async Task ExecuteAsynWhenPassedTheCreateEastParameterANewRoomIsCreatedToTheEast()
+        {
+            //Arrange
+            EditType? editType = EditType.Room;
+            mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(roomContext.CurrentCommandingPlayer.Name, out editType)).Returns(true);
+
+            string[] testParameters = new string[1] { "create-east" };
+
+            mockRoomRepository.Setup(r => r.CreateNewRoom(It.IsAny<int>(), It.Is<Directions>(d => d == Directions.East)))
+                .Returns(Task.CompletedTask);
+
+            //Act
+            var result = await roomEditCommand.ExecuteAsync(roomContext, testParameters);
+
+            //Assert
+            mockEditingState.VerifyAll();
+            mockRoomRepository.VerifyAll();
+            Assert.NotNull(result);
+            Assert.True(result.Count == 0);
+            Assert.True(roomContext.CurrentCommandingPlayer.MessageQueueCount == 1);
+            Assert.Contains("room updated", roomContext.CurrentCommandingPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
+            Assert.True(roomContext.CurrentCommandingPlayer.CommandQueueCount == 1);
+            var command = roomContext.CurrentCommandingPlayer.DequeueCommand();
+            Assert.Contains(Directions.East.ToString(), command, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact(DisplayName = "ExecuteAsync => When passed the create-south parameter, a new room is created to the south")]
+        public async Task ExecuteAsynWhenPassedTheCreateSouthParameterANewRoomIsCreatedToTheSouth()
+        {
+            //Arrange
+            EditType? editType = EditType.Room;
+            mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(roomContext.CurrentCommandingPlayer.Name, out editType)).Returns(true);
+
+            string[] testParameters = new string[1] { "create-south" };
+
+            mockRoomRepository.Setup(r => r.CreateNewRoom(It.IsAny<int>(), It.Is<Directions>(d => d == Directions.South)))
+                .Returns(Task.CompletedTask);
+
+            //Act
+            var result = await roomEditCommand.ExecuteAsync(roomContext, testParameters);
+
+            //Assert
+            mockEditingState.VerifyAll();
+            mockRoomRepository.VerifyAll();
+            Assert.NotNull(result);
+            Assert.True(result.Count == 0);
+            Assert.True(roomContext.CurrentCommandingPlayer.MessageQueueCount == 1);
+            Assert.Contains("room updated", roomContext.CurrentCommandingPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
+            Assert.True(roomContext.CurrentCommandingPlayer.CommandQueueCount == 1);
+            var command = roomContext.CurrentCommandingPlayer.DequeueCommand();
+            Assert.Contains(Directions.South.ToString(), command, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact(DisplayName = "ExecuteAsync => When passed the create-west parameter, a new room is created to the west")]
+        public async Task ExecuteAsynWhenPassedTheCreateWestParameterANewRoomIsCreatedToTheWest()
+        {
+            //Arrange
+            EditType? editType = EditType.Room;
+            mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(roomContext.CurrentCommandingPlayer.Name, out editType)).Returns(true);
+
+            string[] testParameters = new string[1] { "create-west" };
+
+            mockRoomRepository.Setup(r => r.CreateNewRoom(It.IsAny<int>(), It.Is<Directions>(d => d == Directions.West)))
+                .Returns(Task.CompletedTask);
+
+            //Act
+            var result = await roomEditCommand.ExecuteAsync(roomContext, testParameters);
+
+            //Assert
+            mockEditingState.VerifyAll();
+            mockRoomRepository.VerifyAll();
+            Assert.NotNull(result);
+            Assert.True(result.Count == 0);
+            Assert.True(roomContext.CurrentCommandingPlayer.MessageQueueCount == 1);
+            Assert.Contains("room updated", roomContext.CurrentCommandingPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
+            Assert.True(roomContext.CurrentCommandingPlayer.CommandQueueCount == 1);
+            var command = roomContext.CurrentCommandingPlayer.DequeueCommand();
+            Assert.Contains(Directions.West.ToString(), command, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact(DisplayName = "ExecuteAsync => When passed the create-up parameter, a new room is created to the up")]
+        public async Task ExecuteAsynWhenPassedTheCreateUpParameterANewRoomIsCreatedToTheUp()
+        {
+            //Arrange
+            EditType? editType = EditType.Room;
+            mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(roomContext.CurrentCommandingPlayer.Name, out editType)).Returns(true);
+
+            string[] testParameters = new string[1] { "create-up" };
+
+            mockRoomRepository.Setup(r => r.CreateNewRoom(It.IsAny<int>(), It.Is<Directions>(d => d == Directions.Up)))
+                .Returns(Task.CompletedTask);
+
+            //Act
+            var result = await roomEditCommand.ExecuteAsync(roomContext, testParameters);
+
+            //Assert
+            mockEditingState.VerifyAll();
+            mockRoomRepository.VerifyAll();
+            Assert.NotNull(result);
+            Assert.True(result.Count == 0);
+            Assert.True(roomContext.CurrentCommandingPlayer.MessageQueueCount == 1);
+            Assert.Contains("room updated", roomContext.CurrentCommandingPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
+            Assert.True(roomContext.CurrentCommandingPlayer.CommandQueueCount == 1);
+            var command = roomContext.CurrentCommandingPlayer.DequeueCommand();
+            Assert.Contains(Directions.Up.ToString(), command, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact(DisplayName = "ExecuteAsync => When passed the create-down parameter, a new room is created to the down")]
+        public async Task ExecuteAsynWhenPassedTheCreateDownParameterANewRoomIsCreatedToTheDown()
+        {
+            //Arrange
+            EditType? editType = EditType.Room;
+            mockEditingState.Setup(es => es.IsPlayerCurrentlyEditing(roomContext.CurrentCommandingPlayer.Name, out editType)).Returns(true);
+
+            string[] testParameters = new string[1] { "create-down" };
+
+            mockRoomRepository.Setup(r => r.CreateNewRoom(It.IsAny<int>(), It.Is<Directions>(d => d == Directions.Down)))
+                .Returns(Task.CompletedTask);
+
+            //Act
+            var result = await roomEditCommand.ExecuteAsync(roomContext, testParameters);
+
+            //Assert
+            mockEditingState.VerifyAll();
+            mockRoomRepository.VerifyAll();
+            Assert.NotNull(result);
+            Assert.True(result.Count == 0);
+            Assert.True(roomContext.CurrentCommandingPlayer.MessageQueueCount == 1);
+            Assert.Contains("room updated", roomContext.CurrentCommandingPlayer.DequeueMessage(), StringComparison.OrdinalIgnoreCase);
+            Assert.True(roomContext.CurrentCommandingPlayer.CommandQueueCount == 1);
+            var command = roomContext.CurrentCommandingPlayer.DequeueCommand();
+            Assert.Contains(Directions.Down.ToString(), command, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

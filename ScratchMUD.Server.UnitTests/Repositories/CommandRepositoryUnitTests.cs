@@ -1,4 +1,5 @@
 ﻿using Moq;
+using ScratchMUD.Server.Combat;
 using ScratchMUD.Server.EntityFramework;
 using ScratchMUD.Server.Infrastructure;
 using ScratchMUD.Server.Repositories;
@@ -18,8 +19,9 @@ namespace ScratchMUD.Server.UnitTests.Repositories
         {
             var mockRoomRepository = new Mock<IRoomRepository>(MockBehavior.Strict);
             var mockPlayerRepository = new Mock<IPlayerRepository>(MockBehavior.Strict);
+            var mockPlayerCombatHostedService = new Mock<IPlayerCombatHostedService>(MockBehavior.Strict);
 
-            commandRespository = new CommandRepository(mockRoomRepository.Object, new EditingState(), mockPlayerRepository.Object);
+            commandRespository = new CommandRepository(mockRoomRepository.Object, new EditingState(), mockPlayerRepository.Object, mockPlayerCombatHostedService.Object);
 
             roomContext = new RoomContext
             {
